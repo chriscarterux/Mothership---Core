@@ -10,7 +10,7 @@
                                     👽 v1.0.0
 ```
 
-> **"We come in peace. We leave with features."**
+> **"I come in peace. I leave with features."**
 
 ---
 
@@ -404,13 +404,13 @@ Mothership development:
 Human thinks → Mothership does everything else → Human approves → 🎉
 ```
 
-We believe developers should focus on **what** to build, not **how** to build it. The Mothership handles the how. You handle the what and the why.
+I believe developers should focus on **what** to build, not **how** to build it. The Mothership handles the how. You handle the what and the why.
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions from all species. Please read our [Contributing Guide](./CONTRIBUTING.md) before submitting pull requests.
+I welcome contributions from all species. Please read the [Contributing Guide](./CONTRIBUTING.md) before submitting pull requests.
 
 ```bash
 # Run tests before submitting
@@ -434,14 +434,14 @@ MIT License - See [LICENSE](./LICENSE)
 Mothership evolved from the **Ralph pattern** pioneered by brilliant minds in the AI coding community:
 
 ### 🎩 Geoffrey Huntley
-Creator of the original [Ralph concept](https://ghuntley.com/ralph/) - the insight that a simple bash loop running an AI agent repeatedly can accomplish complex tasks through "eventual consistency." His philosophy that "LLMs are mirrors of operator skill" shaped our approach.
+Creator of the original [Ralph concept](https://ghuntley.com/ralph/) - the insight that a simple bash loop running an AI agent repeatedly can accomplish complex tasks through "eventual consistency." His philosophy that "LLMs are mirrors of operator skill" shaped my approach.
 
 ### 🚀 Ryan Carson  
 Built the popular [snarktank/ralph](https://github.com/snarktank/ralph) implementation that made the pattern accessible. His prd.json + progress.txt + prompt.md architecture proved the concept works in production.
 
 ### Why Mothership?
 
-After using Ralph extensively, we loved the core loop but wanted:
+After using Ralph extensively, I loved the core loop but wanted:
 - **Specialized agents** (not one agent doing everything)
 - **Linear integration** (not local JSON files)
 - **Structured checkpoints** (for precise recovery)
@@ -451,7 +451,7 @@ After using Ralph extensively, we loved the core loop but wanted:
 **Ralph = one brilliant agent in a loop.**
 **Mothership = a fleet of specialized agents in a pipeline.**
 
-See [CREDITS.md](./CREDITS.md) for the full story of what we learned and how Mothership differs.
+See [CREDITS.md](./CREDITS.md) for the full story of what I learned and how Mothership differs.
 
 ---
 

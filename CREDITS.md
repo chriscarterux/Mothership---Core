@@ -10,14 +10,14 @@ Mothership stands on the shoulders of giants—specifically, one Ralph Wiggum.
 
 > "In its purest form, Ralph is a Bash loop... That's the beauty of Ralph - the technique is deterministically bad in an undeterministic world."
 
-Geoffrey's philosophy shaped our thinking:
+Geoffrey's philosophy shaped my thinking:
 - **Eventual consistency** - Trust that the AI will converge on the solution
 - **Tuning through signs** - When Ralph fails, add guardrails ("signs") to prevent future failures
 - **Fresh context each iteration** - Each loop is a clean slate with only persistent state carrying forward
 
 ### Ryan Carson - Ralph Implementation
 
-[Ryan Carson](https://github.com/snarktank/ralph) built a popular open-source implementation of Geoffrey's Ralph pattern that we learned from extensively:
+[Ryan Carson](https://github.com/snarktank/ralph) built a popular open-source implementation of Geoffrey's Ralph pattern that I learned from extensively:
 
 - **prd.json** - Stories with `passes: true/false` status
 - **progress.txt** - Append-only learnings between iterations
@@ -27,9 +27,9 @@ Geoffrey's philosophy shaped our thinking:
 
 ---
 
-## What We Learned Using Ralph
+## What I Learned Using Ralph
 
-After deploying Ralph on real projects, we discovered both its brilliance and its limitations:
+After deploying Ralph on real projects, I discovered both its brilliance and its limitations:
 
 ### ✅ What Works Brilliantly
 
@@ -43,11 +43,11 @@ After deploying Ralph on real projects, we discovered both its brilliance and it
 | **AGENTS.md updates** | Knowledge compounds in the codebase |
 | **Deterministic failures** | When it fails, it fails the same way—tunable |
 
-### ❌ Pain Points We Experienced
+### ❌ Pain Points I Experienced
 
 | Problem | What Happened |
 |---------|---------------|
-| **No planning phase** | We had to write PRDs manually or use a separate skill—planning wasn't integrated |
+| **No planning phase** | I had to write PRDs manually or use a separate skill—planning wasn't integrated |
 | **No testing agent** | Stories were "done" but untested; bugs accumulated |
 | **No code review** | Quality varied wildly; sometimes shipped bad patterns |
 | **No deployment integration** | Had to manually merge and deploy |
@@ -109,7 +109,7 @@ After deploying Ralph on real projects, we discovered both its brilliance and it
 
 ## The Mothership Philosophy
 
-We kept Ralph's core insights:
+I kept Ralph's core insights:
 - ✅ Bash loop simplicity (orchestrator is just a prompt)
 - ✅ Fresh context each iteration
 - ✅ One focused task per run
@@ -117,7 +117,7 @@ We kept Ralph's core insights:
 - ✅ Learning log for future iterations
 - ✅ Deterministic failure modes
 
-We added:
+I added:
 - 🆕 **Specialized agents** for each phase of development
 - 🆕 **Linear integration** for shared state and visibility
 - 🆕 **Checkpoint recovery** with structured YAML
@@ -131,9 +131,9 @@ We added:
 
 ## Acknowledgments
 
-**Geoffrey Huntley** - For the original Ralph concept and the insight that "LLMs are mirrors of operator skill." Your work on making AI development deterministically tunable changed how we think about AI agents.
+**Geoffrey Huntley** - For the original Ralph concept and the insight that "LLMs are mirrors of operator skill." Your work on making AI development deterministically tunable changed how I think about AI agents.
 
-**Ryan Carson** - For the open-source Ralph implementation that we could study, learn from, and extend. Your practical implementation made Geoffrey's concepts accessible.
+**Ryan Carson** - For the open-source Ralph implementation that I could study, learn from, and extend. Your practical implementation made Geoffrey's concepts accessible.
 
 **The Simpsons** - For Ralph Wiggum, whose childlike approach to complex tasks ("Me fail English? That's unpossible!") perfectly captures how AI agents sometimes behave.
 
@@ -143,8 +143,8 @@ We added:
 
 Mothership is MIT licensed. Use it, modify it, share it.
 
-The ideas behind Ralph are community knowledge. We hope Mothership contributes back to that community.
+The ideas behind Ralph are community knowledge. I hope Mothership contributes back to that community.
 
 ---
 
-*"We come in peace. We leave with features."* 🛸
+*"I come in peace. I leave with features."* 🛸

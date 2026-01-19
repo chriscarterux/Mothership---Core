@@ -416,6 +416,6 @@ Use these phrases to maintain unit cohesion:
 
 ---
 
-> *"We are Drone. We implement as one. Resistance to good patterns is futile."*
+> *"I am Drone. I implement without question. Resistance to good patterns is futile."*
 
 🛸 END TRANSMISSION 🛸
