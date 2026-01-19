@@ -1,5 +1,6 @@
 #!/bin/bash
 # Mothership Loop - Iterative build/test/plan automation
+# Works with any AI CLI tool (amp, claude, cursor, openai, etc.)
 
 set -e
 trap 'echo -e "\n\n🛸 Mothership interrupted. Progress saved to progress.md"; exit 130' INT
@@ -8,8 +9,23 @@ MODE="${1:-build}"
 MAX_ITERATIONS="${2:-10}"
 PLAN_CONTEXT="$2"
 
+# Detect AI tool (set AI_TOOL env var or auto-detect)
+if [[ -n "$AI_TOOL" ]]; then
+    AI_CMD="$AI_TOOL"
+elif command -v amp &> /dev/null; then
+    AI_CMD="amp"
+elif command -v claude &> /dev/null; then
+    AI_CMD="claude"
+elif command -v cursor &> /dev/null; then
+    AI_CMD="cursor"
+else
+    echo "🛸 No AI CLI tool found. Set AI_TOOL env var or install amp/claude/cursor."
+    echo "   Example: AI_TOOL='my-ai-cli' ./mothership.sh build"
+    exit 1
+fi
+
 # Detect version
-if [[ -d ".mothership/drones" ]]; then
+if [[ -d ".mothership/agents" ]]; then
     VERSION="full"
 else
     VERSION="lite"
@@ -24,7 +40,8 @@ case "$MODE" in
     *)      echo "Usage: ./mothership.sh [build|test|plan|review] [max_iterations|context]"; exit 1 ;;
 esac
 
-echo "🛸 Mothership Loop - Mode: $MODE, Max: $MAX_ITERATIONS iterations ($VERSION)"
+echo "🛸 Mothership Loop - Mode: $MODE, Max: $MAX_ITERATIONS iterations"
+echo "   Version: $VERSION | AI Tool: $AI_CMD"
 echo ""
 echo "$(date '+%Y-%m-%d %H:%M:%S') - Starting $MODE mode" >> progress.md
 
@@ -35,13 +52,13 @@ for ((i=1; i<=MAX_ITERATIONS; i++)); do
     
     # Build the prompt
     if [[ "$MODE" == "plan" && -n "$PLAN_CONTEXT" ]]; then
-        PROMPT="@.mothership Plan: $PLAN_CONTEXT"
+        PROMPT="Read .mothership/mothership.md and run: plan $PLAN_CONTEXT"
     else
-        PROMPT="@.mothership Continue $MODE mode. Check status and proceed."
+        PROMPT="Read .mothership/mothership.md and run: $MODE"
     fi
     
-    # Run amp and capture output
-    OUTPUT=$(amp "$PROMPT" 2>&1) || true
+    # Run AI tool and capture output
+    OUTPUT=$(echo "$PROMPT" | $AI_CMD 2>&1) || true
     echo "$OUTPUT"
     
     # Log to progress.md
@@ -51,16 +68,16 @@ for ((i=1; i<=MAX_ITERATIONS; i++)); do
     echo "$OUTPUT" | tail -50 >> progress.md
     echo '```' >> progress.md
     
-    # Check for completion signals
-    if echo "$OUTPUT" | grep -qE "<drone>($SIGNALS)</drone>"; then
+    # Check for completion signals (various formats)
+    if echo "$OUTPUT" | grep -qE "<(mothership|drone|probe|oracle|overseer)>($SIGNALS)<"; then
         echo ""
         echo "🛸 Mothership complete! Finished at iteration $i."
         echo "$(date '+%Y-%m-%d %H:%M:%S') - Completed at iteration $i" >> progress.md
         exit 0
     fi
     
-    # Also check for signal without drone tags (flexibility)
-    if echo "$OUTPUT" | grep -qE "^($SIGNALS)$"; then
+    # Also check for signal without tags (flexibility)
+    if echo "$OUTPUT" | grep -qE "($SIGNALS)"; then
         echo ""
         echo "🛸 Mothership complete! Finished at iteration $i."
         echo "$(date '+%Y-%m-%d %H:%M:%S') - Completed at iteration $i" >> progress.md

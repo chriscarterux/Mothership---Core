@@ -201,12 +201,7 @@ Read .mothership/mothership.md and run: review
 
 Or loop it:
 ```bash
-while true; do
-  OUTPUT=$(echo "Read .mothership/mothership.md and run: build" | amp 2>&1)
-  echo "$OUTPUT"
-  if echo "$OUTPUT" | grep -q "BUILD-COMPLETE"; then break; fi
-  sleep 2
-done
+./mothership.sh build 20
 ```
 
 ---

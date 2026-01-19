@@ -16,27 +16,7 @@ echo "Read .mothership/mothership.md and run: build" | amp --dangerously-allow-a
 ./mothership.sh build 20
 ```
 
-## Handoff (for long tasks)
-
-Add to `~/.config/amp/settings.json`:
-```json
-{
-  "auto_handoff": true
-}
-```
-
-This enables automatic handoff when context fills up.
-
-## MCP Tools Available
-
-Amp has built-in MCP tools:
-- `Linear:*` - Linear integration
-- File operations
-- Git operations
-- Terminal access
-
 ## Tips
 
-- Amp auto-reads AGENTS.md files
-- Use `amp --continue` to resume threads
-- Check `amp threads` for history
+- Use `amp --continue` to resume previous sessions
+- Check `amp --help` for more options

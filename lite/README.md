@@ -66,20 +66,10 @@ cp /path/to/mothership-lite/mothership.md .mothership/
 
 ```bash
 # Build all stories
-while true; do
-  OUTPUT=$(echo "Read .mothership/mothership.md and run: build" | amp 2>&1)
-  echo "$OUTPUT"
-  if echo "$OUTPUT" | grep -q "BUILD-COMPLETE"; then break; fi
-  sleep 2
-done
+./mothership.sh build 20
 
 # Test all stories
-while true; do
-  OUTPUT=$(echo "Read .mothership/mothership.md and run: test" | amp 2>&1)
-  echo "$OUTPUT"
-  if echo "$OUTPUT" | grep -q "TEST-COMPLETE"; then break; fi
-  sleep 2
-done
+./mothership.sh test 20
 ```
 
 ---

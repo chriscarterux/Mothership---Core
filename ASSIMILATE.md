@@ -63,7 +63,7 @@ I detected [X]. I need to know:
    → trello
 
 2. AI TOOL - What are you using?
-   → amp (Amp by Sourcegraph)
+   → amp
    → claude (Claude Code / Claude Desktop)
    → cursor (Cursor IDE)
    → openai (ChatGPT / Codex)
