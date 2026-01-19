@@ -24,7 +24,7 @@ curl -fsSL https://raw.githubusercontent.com/chriscarterux/Mothership/main/insta
 
 Mothership detects your environment:
 - **Project type:** Node.js, Rust, Go, Python
-- **AI tool:** Claude, Cursor, Aider
+- **AI tool:** AMP, Claude, Cursor, Aider
 - **State system:** Linear, Jira, GitHub Issues
 
 ### 2. Configure (3 Questions)
@@ -34,10 +34,10 @@ Only asks what it can't detect:
 | Question | Options | Default |
 |----------|---------|---------|
 | **State backend** | linear, jira, github, notion, trello, json | json |
-| **Version** | lite (1 file), full (4 agents) | lite |
+| **Tier** | shard (1 file), array (4 agents), matrix (enterprise) | shard |
 | **Docs path** | Where are feature docs? | ./docs |
 
-**Example response:** `json, lite, ./docs`
+**Example response:** `json, shard, ./docs`
 
 ### 3. Setup (Automatic)
 
@@ -55,7 +55,7 @@ Creates:
 
 Say "use defaults" to skip questions:
 - State: `json` (local file)
-- Version: `lite` (simplest)
+- Tier: `shard` (simplest)
 - Docs: `./docs`
 
 ---
@@ -94,7 +94,7 @@ Say "use defaults" to skip questions:
 ## Troubleshooting
 
 **"No AI tool found"**
-→ Install claude, cursor, or aider CLI, or set `AI_TOOL=your-cli`
+→ Install amp, claude, cursor, or aider CLI, or set `AI_TOOL=your-cli`
 
 **"No .mothership/ directory"**
 → Run the installer or create manually

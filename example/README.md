@@ -21,11 +21,11 @@ The user should be able to:
 
 ## Try It
 
-### Using Lite (simplest)
+### Using Shard (simplest)
 
 ```bash
 cd example
-cp ../lite/mothership.md .mothership/
+cp ../shard/mothership.md .mothership/
 
 # Plan the feature
 "Read .mothership/mothership.md and run: plan user onboarding flow"
@@ -40,11 +40,11 @@ cp ../lite/mothership.md .mothership/
 "Read .mothership/mothership.md and run: review"
 ```
 
-### Using Full (specialized agents)
+### Using Array (specialized agents)
 
 ```bash
 cd example
-cp -r ../full/* .mothership/
+cp -r ../array/* .mothership/
 
 # Plan
 "Read .mothership/mothership.md and run: plan user onboarding flow"
@@ -52,7 +52,26 @@ cp -r ../full/* .mothership/
 # Build
 ./mothership.sh build 10
 
-# Test  
+# Test
+./mothership.sh test 10
+
+# Review
+"Read .mothership/mothership.md and run: review"
+```
+
+### Using Matrix (enterprise)
+
+```bash
+cd example
+cp -r ../matrix/* .mothership/
+
+# Plan
+"Read .mothership/mothership.md and run: plan user onboarding flow"
+
+# Build
+./mothership.sh build 10
+
+# Test
 ./mothership.sh test 10
 
 # Review
@@ -64,8 +83,8 @@ cp -r ../full/* .mothership/
 ```
 example/
 ├── .mothership/
-│   ├── mothership.md    # (copy from lite/ or full/)
-│   ├── config.json      # (if using full/)
+│   ├── mothership.md    # (copy from shard/, array/, or matrix/)
+│   ├── config.json      # (if using array/ or matrix/)
 │   └── checkpoint.md    # (created automatically)
 ├── docs/
 │   └── onboarding.md    # Feature requirements

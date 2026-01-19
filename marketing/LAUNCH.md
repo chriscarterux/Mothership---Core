@@ -16,7 +16,7 @@ Here's how it works (thread) 👇
 The problem with AI coding assistants:
 
 - You still write the PRD
-- You still run the tests  
+- You still run the tests
 - You still do code review
 - You still deploy
 
@@ -25,12 +25,12 @@ What if AI handled ALL of it?
 
 ### Tweet 3 (Solution)
 ```
-Mothership is a fleet of specialized AI agents:
+Mothership is a fleet of specialized Xenotech agents:
 
-🔮 Oracle - Reads your docs, creates stories
-🛠️ Drone - Implements one story at a time
-🔬 Probe - Writes chaos tests
-👁️ Overseer - Reviews before merge
+🔮 Cipher - Reads your docs, creates stories
+⚡ Vector - Implements one story at a time
+🧠 Cortex - Writes chaos tests
+👁️ Sentinel - Reviews before merge
 
 Each agent does ONE thing well.
 ```
@@ -40,14 +40,14 @@ Each agent does ONE thing well.
 Here's what it looks like:
 
 1. "Plan user authentication"
-   → Oracle creates 6 stories
+   → Cipher creates 6 stories
 
 2. ./mothership.sh build 20
-   → Drone implements each story
+   → Vector implements each story
    → Commits automatically
 
 3. ./mothership.sh test
-   → Probe writes edge case tests
+   → Cortex writes edge case tests
 
 Done. ✅
 ```
@@ -71,7 +71,7 @@ One-line install:
 curl -fsSL https://raw.githubusercontent.com/chriscarterux/Mothership/main/install.sh | bash
 
 Works with:
-- Any AI tool (Claude, Cursor, GPT-4)
+- Any AI tool (AMP, Claude, Cursor, GPT-4)
 - Any project tracker (Linear, Jira, GitHub Issues)
 - New or existing codebases
 ```
@@ -96,12 +96,12 @@ Mothership takes it further: planning + testing + review built in.
 
 The problem: AI coding assistants are powerful, but you still do all the planning, testing, and reviewing yourself.
 
-The solution: Specialized AI agents that handle the entire development cycle:
+The solution: Specialized Xenotech agents that handle the entire development cycle:
 
-1. Oracle reads your docs and creates stories
-2. Drone implements one story at a time
-3. Probe writes chaos tests
-4. Overseer reviews code before merge
+1. Cipher reads your docs and creates stories
+2. Vector implements one story at a time
+3. Cortex writes chaos tests
+4. Sentinel reviews code before merge
 
 It's like having a dev team that never sleeps.
 
@@ -122,15 +122,15 @@ Title: I built an AI agent system that plans, codes, tests, and reviews automati
 
 I got tired of AI assistants that help with coding but still require me to do all the planning, testing, and review.
 
-So I built Mothership - a fleet of specialized AI agents:
-- Oracle: Reads docs, creates stories
-- Drone: Implements one story per iteration  
-- Probe: Writes chaos tests
-- Overseer: Reviews before merge
+So I built Mothership - a fleet of specialized Xenotech agents:
+- Cipher: Reads docs, creates stories
+- Vector: Implements one story per iteration
+- Cortex: Writes chaos tests
+- Sentinel: Reviews before merge
 
 It loops until complete, fresh context each time.
 
-Works with any AI tool (Claude, Cursor, GPT-4). MIT licensed.
+Works with any AI tool (AMP, Claude, Cursor, GPT-4). MIT licensed.
 
 GitHub: [link]
 
@@ -163,14 +163,14 @@ Hey HN,
 
 I built Mothership after getting frustrated that AI coding assistants still require manual planning, testing, and review.
 
-Mothership is a fleet of specialized AI agents:
-- Oracle reads your docs and creates stories
-- Drone implements one story at a time (loops until done)
-- Probe writes chaos tests (edge cases, security, etc.)
-- Overseer reviews code before merge
+Mothership is a fleet of specialized Xenotech agents:
+- Cipher reads your docs and creates stories
+- Vector implements one story at a time (loops until done)
+- Cortex writes chaos tests (edge cases, security, etc.)
+- Sentinel reviews code before merge
 
 Key differences from similar tools:
-- Works with any AI CLI (Claude, Cursor, GPT-4)
+- Works with any AI CLI (AMP, Claude, Cursor, GPT-4)
 - Integrates with Linear, Jira, GitHub Issues, or local JSON
 - Planning is automated (reads your docs)
 - Testing is a dedicated agent, not an afterthought
@@ -204,8 +204,8 @@ Add these topics to the repo:
 ## Social Preview Image
 
 Create a 1280x640 image with:
-- Dark space background
+- Dark space background with grid pattern
 - UFO emoji or illustration
-- "MOTHERSHIP" in gradient text
-- Tagline: "AI agents that build your features"
-- Agent icons: 🔮 🛠️ 🔬 👁️
+- "MOTHERSHIP" in gradient text (cyan → purple → green)
+- Tagline: "Xenotech AI agents that build your features"
+- Agent icons: 🔮 ⚡ 🧠 👁️

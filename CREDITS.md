@@ -68,7 +68,7 @@ After deploying Ralph on real projects, I discovered both its brilliance and its
 
 4. **Checkpoints enable recovery.** Ralph relies on git + progress.txt for memory. Adding structured checkpoints with YAML front-matter enables precise recovery from any point.
 
-5. **Specialized agents outperform generalists.** A dedicated testing agent (Probe) finds more bugs than a story-completing agent running tests as an afterthought.
+5. **Specialized agents outperform generalists.** A dedicated testing agent (Cortex) finds more bugs than a story-completing agent running tests as an afterthought.
 
 ---
 
@@ -76,20 +76,20 @@ After deploying Ralph on real projects, I discovered both its brilliance and its
 
 | Aspect | Ralph | Mothership |
 |--------|-------|------------|
-| **Agents** | 1 (implements stories) | 9 specialized (plan, build, test, review, deploy, prioritize, monitor, document, cleanup) |
+| **Agents** | 1 (implements stories) | 14 specialized (plan, build, test, review, deploy, prioritize, monitor, document, cleanup + enterprise) |
 | **State machine** | prd.json (local) | Linear (shared, integrated) |
-| **Planning** | External (manual or skill) | Oracle agent (integrated) |
-| **Testing** | Optional step in story | Probe agent (dedicated chaos testing) |
-| **Review** | None | Overseer agent (security, perf, a11y) |
-| **Deployment** | Manual | Beacon agent (staged rollout, auto-rollback) |
+| **Planning** | External (manual or skill) | Cipher agent (integrated) |
+| **Testing** | Optional step in story | Cortex agent (dedicated chaos testing) |
+| **Review** | None | Sentinel agent (security, perf, a11y) |
+| **Deployment** | Manual | Pulse agent (staged rollout, auto-rollback) |
 | **Recovery** | Git + progress.txt | Checkpoint.md with YAML front-matter |
 | **Identity protection** | Minimal | Explicit identity locks in every agent |
 | **Codebase learning** | AGENTS.md updates | codebase.md + AGENTS.md |
 | **Dependencies** | Flat list | Dependency graphs with blocking detection |
-| **Prioritization** | Manual ordering | Hivemind agent (ROI scoring) |
-| **Monitoring** | None | Watcher agent (anomaly detection) |
-| **Documentation** | None | Scribe agent (auto-generates docs) |
-| **Tech debt** | Manual | Recycler agent (tracks and cleans) |
+| **Prioritization** | Manual ordering | Nexus agent (ROI scoring) |
+| **Monitoring** | None | Vigil agent (anomaly detection) |
+| **Documentation** | None | Archive agent (auto-generates docs) |
+| **Tech debt** | Manual | Purge agent (tracks and cleans) |
 
 ### Philosophical Differences
 

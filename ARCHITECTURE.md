@@ -4,8 +4,8 @@
 
 Every line is a token. Every token costs money and context space. The original Mothership had:
 - 702-line orchestrator
-- 926-line Probe (tester)
-- 468-line Overseer (reviewer)
+- 926-line Cortex (tester)
+- 468-line Sentinel (reviewer)
 - **Total: 4,197 lines**
 
 Ralph works with ~100 lines. We were 40x larger.
@@ -18,37 +18,53 @@ Ralph works with ~100 lines. We were 40x larger.
 
 | Agent | Why Essential | Target Lines |
 |-------|---------------|--------------|
-| **Oracle** | Plans features → Linear stories. Ralph lacks this. | 100 |
-| **Drone** | Implements stories. This IS the work. | 100 |
-| **Probe** | Writes tests. Ralph does this poorly. | 100 |
-| **Overseer** | Reviews code. Ralph has nothing. | 100 |
+| **Cipher** | Plans features → Linear stories. Ralph lacks this. | 30 |
+| **Vector** | Implements stories. This IS the work. | 30 |
+| **Cortex** | Writes tests. Ralph does this poorly. | 30 |
+| **Sentinel** | Reviews code. Ralph has nothing. | 30 |
 
-**Core total: ~400 lines** (not 2,000+)
+**Core total: ~120 lines** (not 2,000+)
 
 ### Optional Extras (POWER USERS)
 
 | Agent | Why Optional | When Useful |
 |-------|--------------|-------------|
-| **Beacon** | Deploys code. Most deploy manually or via CI. | Complex deploy pipelines |
-| **Hivemind** | Prioritizes backlog. Solo devs know what's next. | Large teams, big backlogs |
-| **Watcher** | Monitors production. Most use Datadog/Sentry. | Custom monitoring needs |
-| **Scribe** | Auto-generates docs. Nice, not essential. | Doc-heavy projects |
-| **Recycler** | Cleans tech debt. Periodic, not per-feature. | Maintenance sprints |
+| **Pulse** | Deploys code. Most deploy manually or via CI. | Complex deploy pipelines |
+| **Nexus** | Prioritizes backlog. Solo devs know what's next. | Large teams, big backlogs |
+| **Vigil** | Monitors production. Most use Datadog/Sentry. | Custom monitoring needs |
+| **Archive** | Auto-generates docs. Nice, not essential. | Doc-heavy projects |
+| **Purge** | Cleans tech debt. Periodic, not per-feature. | Maintenance sprints |
+
+### Enterprise Agents (MATRIX ONLY)
+
+| Agent | Why Enterprise | When Useful |
+|-------|----------------|-------------|
+| **Arbiter** | Resolves conflicts between agents/teams | Multi-team projects |
+| **Conductor** | Orchestrates multi-service deployments | Microservices |
+| **Coalition** | Coordinates cross-team work | Enterprise scale |
+| **Vault** | Manages secrets and security scanning | Compliance requirements |
+| **Telemetry** | DORA metrics and analytics | Engineering excellence |
 
 ---
 
-## Two Versions
+## Three Tiers
 
-### Mothership Lite (~150 lines)
+### Shard (~180 lines)
 - **One file** with modes: plan, build, test, review
 - For: Solo devs, small projects, getting started
 - Overhead: Minimal
 
-### Mothership Full (~600 lines total)
-- **Orchestrator** (~150 lines) + **4 core agents** (~100 each)
+### Array (~260 lines total)
+- **Orchestrator** (~50 lines) + **4 core agents** (~30 each)
 - Optional agents available but not loaded by default
 - For: Teams, complex projects, specialized workflows
 - Overhead: Moderate (only loads what's needed)
+
+### Matrix (~600 lines total)
+- **Array** + **5 enterprise agents** (~30 each)
+- Governance, approvals, multi-service deployment
+- For: Enterprise, compliance requirements, large teams
+- Overhead: Higher (enterprise features)
 
 ---
 
@@ -78,14 +94,14 @@ Ralph works with ~100 lines. We were 40x larger.
 
 ## Token Budget
 
-| Component | Full | Lite |
-|-----------|------|------|
-| Orchestrator | 150 | - |
-| Agent (loaded) | 100 | - |
-| Single prompt | - | 150 |
-| Checkpoint | 4 | 4 |
-| Codebase.md | ~50 | ~50 |
-| **Per-run total** | ~300 | ~200 |
+| Component | Matrix | Array | Shard |
+|-----------|--------|-------|-------|
+| Orchestrator | 50 | 50 | - |
+| Agent (loaded) | 30 | 30 | - |
+| Single prompt | - | - | 180 |
+| Checkpoint | 4 | 4 | 4 |
+| Codebase.md | ~50 | ~50 | ~50 |
+| **Per-run total** | ~130 | ~130 | ~230 |
 
 vs Original: ~1,500+ lines per run
 
@@ -95,28 +111,53 @@ vs Original: ~1,500+ lines per run
 
 ```
 mothership/
-├── lite/
+├── shard/
 │   ├── README.md
-│   └── mothership.md        # 150 lines, all-in-one
+│   └── mothership.md        # 180 lines, all-in-one
 │
-├── full/
+├── array/
 │   ├── README.md
 │   ├── config.json
-│   ├── install.sh
-│   ├── mothership.md        # 150 lines, routes to agents
+│   ├── STATE.md
+│   ├── SIGNALS.md
+│   ├── mothership.md        # 50 lines, routes to agents
 │   └── agents/
-│       ├── oracle.md        # 100 lines
-│       ├── drone.md         # 100 lines
-│       ├── probe.md         # 100 lines
-│       ├── overseer.md      # 100 lines
-│       └── extras/          # Optional, load explicitly
-│           ├── beacon.md
-│           ├── hivemind.md
-│           ├── watcher.md
-│           ├── scribe.md
-│           └── recycler.md
+│       ├── cipher.md        # 30 lines
+│       ├── vector.md        # 30 lines
+│       ├── cortex.md        # 30 lines
+│       ├── sentinel.md      # 30 lines
+│       └── extras/
+│           ├── pulse.md
+│           ├── nexus.md
+│           ├── vigil.md
+│           ├── archive.md
+│           └── purge.md
 │
-├── README.md                 # Choose your version
+├── matrix/
+│   ├── README.md
+│   ├── config.json          # Extended with governance, teams, security
+│   ├── STATE.md
+│   ├── SIGNALS.md
+│   ├── mothership.md
+│   └── agents/
+│       ├── cipher.md
+│       ├── vector.md
+│       ├── cortex.md
+│       ├── sentinel.md
+│       └── extras/
+│           ├── pulse.md
+│           ├── nexus.md
+│           ├── vigil.md
+│           ├── archive.md
+│           ├── purge.md
+│           └── enterprise/
+│               ├── arbiter.md
+│               ├── conductor.md
+│               ├── coalition.md
+│               ├── vault.md
+│               └── telemetry.md
+│
+├── README.md
 ├── CREDITS.md
 └── LICENSE
 ```

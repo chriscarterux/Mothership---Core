@@ -16,7 +16,7 @@ Thanks for wanting to contribute! Here's how to help.
 1. Fork the repo
 2. Create a branch: `git checkout -b feat/your-feature`
 3. Make changes
-4. Test with both lite and full versions
+4. Test with shard, array, and matrix tiers
 5. Submit PR
 
 ## Development Setup
@@ -25,16 +25,19 @@ Thanks for wanting to contribute! Here's how to help.
 git clone https://github.com/chriscarterux/Mothership.git
 cd Mothership
 
-# Test lite version
-cp lite/mothership.md test-project/.mothership/
+# Test shard tier
+cp shard/mothership.md test-project/.mothership/
 
-# Test full version
-cp -r full/* test-project/.mothership/
+# Test array tier
+cp -r array/* test-project/.mothership/
+
+# Test matrix tier
+cp -r matrix/* test-project/.mothership/
 ```
 
 ## Code Style
 
-- Keep prompts concise (target ~100 lines per agent)
+- Keep prompts concise (target ~30 lines per agent)
 - Trust the LLM - don't over-explain
 - Maintain alien humor 🛸
 - Test with multiple AI tools if possible

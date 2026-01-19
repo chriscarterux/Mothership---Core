@@ -1,6 +1,6 @@
 # 🛸 Mothership Roadmap
 
-## Oracle Analysis: What Makes Ralph Successful (4.9k ⭐)
+## Cipher Analysis: What Makes Ralph Successful (4.9k ⭐)
 
 ### Ralph's Winning Formula
 
@@ -18,9 +18,9 @@
 
 | Gap | Mothership Advantage |
 |-----|---------------------|
-| Planning is manual | Oracle auto-creates stories from docs |
-| No dedicated testing | Probe writes chaos tests |
-| No code review | Overseer reviews before merge |
+| Planning is manual | Cipher auto-creates stories from docs |
+| No dedicated testing | Cortex writes chaos tests |
+| No code review | Sentinel reviews before merge |
 | Single tool only | Works with any AI tool |
 | Linear/Jira not supported | 6 state backend adapters |
 | No smart onboarding | ASSIMILATE.md auto-configures |
@@ -55,7 +55,7 @@ curl -fsSL https://raw.githubusercontent.com/chriscarterux/Mothership/main/insta
 ### 🟡 P1: High Value (Competitive Edge)
 
 #### 5. Browser Verification Mode ✅ DONE
-- Added browser verification step to Drone (step 6b in full/agents/drone.md)
+- Added browser verification step to Vector (step 6 in array/agents/vector.md)
 - For UI stories: navigate, verify elements, run Playwright tests
 - Notes verification in commit message
 
@@ -105,20 +105,21 @@ curl -fsSL https://raw.githubusercontent.com/chriscarterux/Mothership/main/insta
 
 | Feature | Ralph | Mothership | Gap |
 |---------|-------|------------|-----|
-| Core files | 3 | 5 (lite) / 10 (full) | ✅ Comparable |
-| Line count | ~200 | ~200 (lite) / ~600 (full) | ✅ Comparable |
+| Core files | 3 | 2 (shard) / 6 (array) / 15+ (matrix) | ✅ Tiered options |
+| Line count | ~200 | ~180 (shard) / ~260 (array) / ~600 (matrix) | ✅ Comparable |
 | Interactive demo | ✅ Yes | ✅ Yes | ✅ **Matched** |
 | Video demo | ✅ Yes | ⚠️ Script ready | 🟡 Record |
 | One-command install | ⚠️ Copy | ✅ `curl \| bash` | ✅ **Advantage** |
 | Skills/templates | ✅ 2 skills | ✅ 2 skills | ✅ **Matched** |
-| Planning | ❌ Manual | ✅ Oracle | ✅ **Advantage** |
-| Testing | ⚠️ Afterthought | ✅ Probe | ✅ **Advantage** |
-| Review | ❌ None | ✅ Overseer | ✅ **Advantage** |
+| Planning | ❌ Manual | ✅ Cipher | ✅ **Advantage** |
+| Testing | ⚠️ Afterthought | ✅ Cortex | ✅ **Advantage** |
+| Review | ❌ None | ✅ Sentinel | ✅ **Advantage** |
 | State backends | 1 (JSON) | 6 | ✅ **Advantage** |
-| AI tools | 1 | 5+ | ✅ **Advantage** |
-| Browser testing | ✅ dev-browser | ✅ Drone step | ✅ **Matched** |
+| AI tools | 1 | 5+ (AMP, Claude, Cursor, Aider, etc.) | ✅ **Advantage** |
+| Browser testing | ✅ dev-browser | ✅ Vector step | ✅ **Matched** |
 | GitHub Action | ❌ No | ✅ Yes | ✅ **Advantage** |
 | Archiving | ✅ Yes | ✅ Yes | ✅ **Matched** |
+| Enterprise tier | ❌ No | ✅ Matrix | ✅ **Advantage** |
 
 ---
 
@@ -138,7 +139,7 @@ curl -fsSL https://raw.githubusercontent.com/chriscarterux/Mothership/main/insta
 - [x] Add example stories.json
 
 ### Week 3: Features & Polish
-- [x] Add browser verification to Drone
+- [x] Add browser verification to Vector
 - [x] Create GitHub Action
 - [x] Add archiving (like Ralph)
 - [x] Improve error messages
