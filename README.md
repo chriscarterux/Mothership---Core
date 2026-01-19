@@ -50,7 +50,7 @@ Supports:
 - **🔬 Chaos Testing** - Probe finds edge cases you'd never think of
 - **👁️ Code Review** - Overseer checks before merge
 - **🌐 Browser Verification** - Drone validates UI with Playwright
-- **🔌 Any AI Tool** - Works with Claude, Cursor, GPT-4, and more
+- **🔌 Any AI Tool** - Works with Claude, Cursor, Aider, and more
 - **📊 Any Tracker** - Linear, Jira, GitHub Issues, Notion, Trello, or JSON
 - **⚡ One-Line Install** - `curl | bash` and you're ready
 - **🤖 GitHub Action** - Run in CI/CD pipelines
@@ -85,8 +85,8 @@ Mothership prompts are **obsessively optimized**. Every line earns its place.
 
 | | [Lite](./lite/) | [Full](./full/) |
 |---|-----------------|-----------------|
-| **Files** | 1 | 5 |
-| **Lines** | ~180 | ~250 |
+| **Files** | 1 | 6 + agents/ |
+| **Lines** | ~180 | ~260 |
 | **Tokens/run** | ~1,100 | ~1,000 |
 | **Agents** | 1 (modes) | 4 (specialized) |
 | **Complexity** | Minimal | Moderate |
@@ -150,7 +150,7 @@ Mothership keeps that simplicity and adds:
 
 ## How It Works
 
-1. **State in Linear** - Stories track progress (not local JSON)
+1. **State anywhere** - Linear, Jira, GitHub Issues, or local JSON
 2. **One task per run** - Fresh context, focused work
 3. **Checkpoint recovery** - Resume after context loss
 4. **Pattern memory** - codebase.md carries learnings
