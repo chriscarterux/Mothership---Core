@@ -88,7 +88,17 @@ Tests added:
 - Coverage: [list what's tested]
 ```
 
-### 8. Signal Completion
+### 8. Log Progress
+Append to `.mothership/progress.md`:
+```
+## [timestamp] - probe: TESTED:[STORY-ID]
+- What was tested
+- Test file paths
+- Edge cases discovered
+---
+```
+
+### 9. Signal Completion
 
 ```
 <probe>TESTED:[STORY-ID]</probe>

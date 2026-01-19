@@ -38,6 +38,20 @@ On every activation:
 
 ---
 
+## State Backend
+
+Read `config.json` to determine backend:
+- `"state": "linear"` → Stories in Linear, use Linear API
+- `"state": "local"` → Stories in `stories.json`, update file directly
+
+For local mode:
+- `stories.json` has: `project`, `branch`, `stories[]`
+- Each story: `{id, title, status, priority, ac[], files[]}`
+- Status: `ready`, `in_progress`, `done`, `blocked`
+- Update status by editing the JSON file
+
+---
+
 ## Checkpoint Format
 
 ```markdown

@@ -13,6 +13,13 @@ Read: mothership/full/state/project.md → get codebase context
 ```
 
 ### 2. Get Story
+**If config.state = "local":**
+- Read `stories.json` from project root
+- Find highest priority story where `status = "ready"`
+- If none, check for `status = "in_progress"` (resume interrupted work)
+- Update status in JSON file instead of Linear API throughout this flow
+
+**Otherwise (Linear):**
 Query Linear for next story:
 1. First check: "In Progress" stories assigned to you (resume interrupted work)
 2. Then check: "Ready" stories in priority order
@@ -84,7 +91,17 @@ Append to `mothership/full/state/checkpoint.md`:
 - Summary: {one line}
 ```
 
-### 12. Signal Complete
+### 12. Log Progress
+Append to `.mothership/progress.md`:
+```
+## [timestamp] - drone: BUILT:{story-id}
+- What was done
+- Files changed
+- Learnings for future iterations
+---
+```
+
+### 13. Signal Complete
 ```
 <drone>BUILT:{story-id}</drone>
 ```

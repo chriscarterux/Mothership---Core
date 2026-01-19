@@ -1,9 +1,5 @@
 {
-  "state": "linear",
-  
-  "linear": {
-    "team": "YOUR_TEAM_NAME"
-  },
+  "state": "local",
   
   "local": {
     "stories_file": "stories.json"

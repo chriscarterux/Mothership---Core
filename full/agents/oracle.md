@@ -71,6 +71,17 @@ echo "oracle: planned [count] stories for [project]" >> .springfield/checkpoint.
 
 ---
 
+## Log Progress
+
+Append to `.mothership/progress.md`:
+```
+## [timestamp] - oracle: PLANNED:[count]
+- Stories created
+- Project structure decisions
+- Learnings for future iterations
+---
+```
+
 ## Output Signal
 
 When planning is complete:
