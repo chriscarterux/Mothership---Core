@@ -1,0 +1,13 @@
+# Mothership runtime files
+progress.md
+.mothership/checkpoint.md
+.mothership/codebase.md
+.mothership/archive/
+
+# Node
+node_modules/
+.next/
+dist/
+
+# OS
+.DS_Store

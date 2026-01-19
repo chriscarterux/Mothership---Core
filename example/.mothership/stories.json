@@ -1,0 +1,160 @@
+{
+  "feature": "User Onboarding Flow",
+  "description": "New users should be able to choose a program and start their first reflection",
+  "stories": [
+    {
+      "id": "onboard-001",
+      "title": "Program Selection Landing Page",
+      "description": "Create a program selection page where new users can compare Discover ($9.95/mo), Journey ($39.95/mo), and The Camino Method ($1,997) with clear value propositions for each tier.",
+      "acceptance_criteria": [
+        "Page displays all three programs with exact pricing",
+        "Each program card shows: price, duration, depth level (Notice/Examine/Transform), and key feature",
+        "Daily time commitment displayed (5-15min, 15-30min, 20-30min respectively)",
+        "Method card indicates '3 coaching sessions included'",
+        "Responsive layout using Tailwind CSS and shadcn/ui Card components",
+        "CTA buttons route to Stripe checkout flow"
+      ],
+      "file_hints": [
+        "app/(marketing)/pricing/page.tsx",
+        "components/programs/program-card.tsx",
+        "lib/stripe/products.ts"
+      ],
+      "estimated_time": "25 min"
+    },
+    {
+      "id": "onboard-002",
+      "title": "Stripe Subscription Checkout Integration",
+      "description": "Implement Stripe checkout for Discover and Journey subscriptions, and one-time payment for The Camino Method.",
+      "acceptance_criteria": [
+        "Discover creates $9.95/mo subscription via Stripe",
+        "Journey creates $39.95/mo subscription via Stripe",
+        "Method processes $1,997 one-time payment",
+        "Successful payment creates user enrollment record in Convex",
+        "Webhook handles checkout.session.completed event",
+        "Error states handled gracefully with user feedback"
+      ],
+      "file_hints": [
+        "app/api/stripe/checkout/route.ts",
+        "app/api/stripe/webhook/route.ts",
+        "convex/enrollments.ts",
+        "convex/schema.ts"
+      ],
+      "estimated_time": "30 min"
+    },
+    {
+      "id": "onboard-003",
+      "title": "Post-Payment Onboarding Welcome Screen",
+      "description": "After successful payment, show a welcome screen that introduces the user to their chosen program and the Three-Dimensional Coherence framework (Identity, Worldview, Relationship).",
+      "acceptance_criteria": [
+        "Welcome message personalized to selected program",
+        "Brief explanation of the three dimensions with visual representation",
+        "Sets expectation: 'Week 1: Identity, Week 2: Worldview, Week 3: Relationship, Week 4: Integration'",
+        "Program-specific AI voice preview (warm/companion for Discover, philosophical/direct for Journey, challenging/coach for Method)",
+        "Continue button routes to first reflection"
+      ],
+      "file_hints": [
+        "app/(app)/onboarding/welcome/page.tsx",
+        "components/onboarding/dimension-preview.tsx",
+        "components/onboarding/voice-preview.tsx"
+      ],
+      "estimated_time": "20 min"
+    },
+    {
+      "id": "onboard-004",
+      "title": "User Enrollment Schema and Queries",
+      "description": "Create Convex schema and queries for user enrollments, tracking program, start date, current day, and reflection history.",
+      "acceptance_criteria": [
+        "Enrollment table with: userId, program, startDate, currentDay, status fields",
+        "Query to get user's active enrollment",
+        "Query to calculate current program day from startDate",
+        "Mutation to create enrollment after payment",
+        "Mutation to advance user to next day after reflection completion",
+        "Convex Auth integration for userId"
+      ],
+      "file_hints": [
+        "convex/schema.ts",
+        "convex/enrollments.ts",
+        "convex/reflections.ts"
+      ],
+      "estimated_time": "20 min"
+    },
+    {
+      "id": "onboard-005",
+      "title": "Day 1 Reflection Prompt Display",
+      "description": "Display the Day 1 prompt for the user's selected program. Discover and Journey start with Identity dimension prompts.",
+      "acceptance_criteria": [
+        "Fetches correct Day 1 prompt based on enrolled program",
+        "Displays prompt with appropriate AI voice tone",
+        "Shows 'Week 1: Identity' context header",
+        "Text input area for user reflection using shadcn/ui Textarea",
+        "Character/word count indicator",
+        "Accessible design with proper ARIA labels"
+      ],
+      "file_hints": [
+        "app/(app)/reflect/page.tsx",
+        "components/reflect/prompt-display.tsx",
+        "components/reflect/reflection-input.tsx",
+        "lib/prompts/day-prompts.ts"
+      ],
+      "estimated_time": "25 min"
+    },
+    {
+      "id": "onboard-006",
+      "title": "Submit Reflection and AI Response",
+      "description": "User submits their reflection and receives an AI response in the appropriate voice for their tier (Discover: warm/curious, Journey: philosophical/direct, Method: challenging/accountable).",
+      "acceptance_criteria": [
+        "Reflection saved to Convex reflections table",
+        "Claude API called with tier-appropriate system prompt",
+        "AI response streams to UI for better UX",
+        "Response tone matches tier (gentle for Discover, moderate challenge for Journey, high challenge for Method)",
+        "Loading state while AI generates response",
+        "Error handling with retry option"
+      ],
+      "file_hints": [
+        "app/api/ai/reflect/route.ts",
+        "convex/reflections.ts",
+        "lib/ai/voice-prompts.ts",
+        "components/reflect/ai-response.tsx"
+      ],
+      "estimated_time": "30 min"
+    },
+    {
+      "id": "onboard-007",
+      "title": "Reflection Complete and Progress Update",
+      "description": "After completing their first reflection, show completion state, update progress, and provide clear next steps for Day 2.",
+      "acceptance_criteria": [
+        "Success message with encouragement appropriate to tier",
+        "User's currentDay incremented in Convex enrollment",
+        "Progress indicator shows '1 of 30' (or 84 for Method)",
+        "Preview of tomorrow's focus without revealing full prompt",
+        "Option to return to dashboard or log out",
+        "First reflection marked with special 'milestone' flag"
+      ],
+      "file_hints": [
+        "app/(app)/reflect/complete/page.tsx",
+        "components/reflect/completion-card.tsx",
+        "components/progress/day-indicator.tsx",
+        "convex/enrollments.ts"
+      ],
+      "estimated_time": "20 min"
+    }
+  ],
+  "tech_stack": {
+    "framework": "Next.js 14 App Router",
+    "database": "Convex",
+    "auth": "Convex Auth",
+    "styling": "Tailwind CSS + shadcn/ui",
+    "payments": "Stripe",
+    "ai": "Anthropic Claude",
+    "hosting": "Vercel"
+  },
+  "domain_context": {
+    "dimensions": ["Identity", "Worldview", "Relationship"],
+    "programs": {
+      "discover": { "price": "$9.95/mo", "days": 30, "depth": "Notice" },
+      "journey": { "price": "$39.95/mo", "days": 30, "depth": "Examine" },
+      "method": { "price": "$1,997", "days": 84, "depth": "Transform" }
+    },
+    "week_structure": "Week 1: Identity, Week 2: Worldview, Week 3: Relationship, Week 4: Integration"
+  }
+}

@@ -31,6 +31,26 @@ else
     VERSION="lite"
 fi
 
+# Archive previous run if exists
+ARCHIVE_DIR=".mothership/archive"
+if [ -f ".mothership/checkpoint.md" ]; then
+    # Read current project from checkpoint
+    CURRENT_PROJECT=$(grep "^project:" .mothership/checkpoint.md | cut -d' ' -f2-)
+    if [ -n "$CURRENT_PROJECT" ] && [ "$CURRENT_PROJECT" != "null" ]; then
+        DATE=$(date +%Y-%m-%d)
+        ARCHIVE_FOLDER="$ARCHIVE_DIR/$DATE-$(echo $CURRENT_PROJECT | tr ' ' '-' | tr '[:upper:]' '[:lower:]')"
+        
+        # Only archive if this looks like a different project
+        if [ ! -d "$ARCHIVE_FOLDER" ]; then
+            echo "📦 Archiving previous run: $CURRENT_PROJECT"
+            mkdir -p "$ARCHIVE_FOLDER"
+            [ -f ".mothership/checkpoint.md" ] && cp .mothership/checkpoint.md "$ARCHIVE_FOLDER/"
+            [ -f ".mothership/stories.json" ] && cp .mothership/stories.json "$ARCHIVE_FOLDER/"
+            [ -f "progress.md" ] && cp progress.md "$ARCHIVE_FOLDER/"
+        fi
+    fi
+fi
+
 # Set completion signals based on mode
 case "$MODE" in
     build)  SIGNALS="BUILD-COMPLETE|COMPLETE" ;;

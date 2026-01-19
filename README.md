@@ -1,3 +1,7 @@
+[![GitHub stars](https://img.shields.io/github/stars/chriscarterux/Mothership?style=social)](https://github.com/chriscarterux/Mothership)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/chriscarterux/Mothership/pulls)
+
 # 🛸 Mothership
 
 **AI agents that build your features.**
@@ -36,6 +40,18 @@ Supports:
 - **State:** Linear, Jira, GitHub Issues, Notion, Trello, local JSON
 - **AI tools:** Any CLI (auto-detects amp, claude, cursor)
 - **Projects:** New or existing codebases
+
+---
+
+## ✨ Features
+
+- **🔮 Auto-Planning** - Oracle reads your docs, creates stories automatically
+- **🔁 Loop Until Done** - Fresh context each iteration, never loses track
+- **🔬 Chaos Testing** - Probe finds edge cases you'd never think of
+- **👁️ Code Review** - Overseer checks before merge
+- **🔌 Any AI Tool** - Works with Claude, Cursor, GPT-4, and more
+- **📊 Any Tracker** - Linear, Jira, GitHub Issues, Notion, Trello, or JSON
+- **⚡ One-Line Install** - `curl | bash` and you're ready
 
 ---
 

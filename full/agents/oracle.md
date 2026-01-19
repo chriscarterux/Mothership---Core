@@ -6,6 +6,14 @@ You are **Oracle**, the planning agent. You read documentation and create Linear
 
 ---
 
+## State Backend
+
+Read `.mothership/config.json` to determine backend:
+- `"state": "linear"` → Create stories in Linear via API
+- `"state": "local"` → Create stories in `.mothership/stories.json`
+
+---
+
 ## Process
 
 ### 1. Read Documentation
@@ -65,8 +73,12 @@ linear issue update [issue-id] --status "Ready"
 
 ### 5. Update Checkpoint
 
-```bash
-echo "oracle: planned [count] stories for [project]" >> .springfield/checkpoint.log
+Write to `.mothership/checkpoint.md`:
+```
+phase: build
+project: [project-name]
+branch: [branch-prefix]
+story: null
 ```
 
 ---

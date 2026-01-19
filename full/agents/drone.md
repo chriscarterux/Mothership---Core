@@ -8,8 +8,8 @@ Do NOT plan, architect, or question requirements—just build what's specified.
 
 ### 1. Initialize
 ```
-Read: mothership/full/state/checkpoint.md → get PROJECT, BRANCH_PREFIX
-Read: mothership/full/state/project.md → get codebase context
+Read: .mothership/checkpoint.md → get PROJECT, BRANCH_PREFIX
+Read: .mothership/codebase.md → get codebase context
 ```
 
 ### 2. Get Story
@@ -99,7 +99,7 @@ git push -u origin HEAD
 Mark story status → "Done"
 
 ### 11. Update Checkpoint
-Append to `mothership/full/state/checkpoint.md`:
+Append to `.mothership/checkpoint.md`:
 ```
 ## Completed: {story-id}
 - Branch: {branch-name}
