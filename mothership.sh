@@ -37,9 +37,185 @@ MODE="${1:-build}"
 MAX_ITERATIONS="${2:-10}"
 PLAN_CONTEXT="$2"
 
+# Token counting function (words * 1.3 approximation)
+count_tokens() {
+    local file="$1"
+    if [[ -f "$file" ]]; then
+        local words=$(wc -w < "$file" | tr -d ' ')
+        echo $(( words * 13 / 10 ))
+    else
+        echo 0
+    fi
+}
+
 # Validate mode
 case "$MODE" in
     build|test|plan|review) ;;
+
+    benchmark)
+        echo ""
+        echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
+        echo -e "${BLUE}  🛸 Mothership Benchmark${NC}"
+        echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
+        echo ""
+
+        TOTAL=0
+
+        if [[ -f ".mothership/mothership.md" ]]; then
+            TOKENS=$(count_tokens ".mothership/mothership.md")
+            TOTAL=$((TOTAL + TOKENS))
+            printf "  %-30s %6d tokens\n" ".mothership/mothership.md" "$TOKENS"
+        fi
+
+        if [[ -f ".mothership/checkpoint.md" ]]; then
+            TOKENS=$(count_tokens ".mothership/checkpoint.md")
+            TOTAL=$((TOTAL + TOKENS))
+            printf "  %-30s %6d tokens\n" ".mothership/checkpoint.md" "$TOKENS"
+        fi
+
+        if [[ -f ".mothership/codebase.md" ]]; then
+            TOKENS=$(count_tokens ".mothership/codebase.md")
+            TOTAL=$((TOTAL + TOKENS))
+            printf "  %-30s %6d tokens\n" ".mothership/codebase.md" "$TOKENS"
+        fi
+
+        echo ""
+        echo -e "${BLUE}───────────────────────────────────────────────────────${NC}"
+        printf "  %-30s ${GREEN}%6d tokens${NC}\n" "TOTAL PER RUN" "$TOTAL"
+        echo -e "${BLUE}───────────────────────────────────────────────────────${NC}"
+        echo ""
+
+        # Cost calculation (Claude Sonnet: $3/1M input tokens)
+        COST=$(echo "scale=4; $TOTAL * 3 / 1000000" | bc 2>/dev/null || echo "0.004")
+        echo -e "  Estimated cost/run: ${CYAN}\$${COST}${NC} (Claude Sonnet)"
+        echo ""
+        exit 0
+        ;;
+
+    doctor)
+        echo ""
+        echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
+        echo -e "${BLUE}  🛸 Mothership Doctor${NC}"
+        echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
+        echo ""
+
+        ISSUES=0
+
+        # Check .mothership directory
+        if [[ -d ".mothership" ]]; then
+            success ".mothership/ directory exists"
+        else
+            echo -e "${RED}✗ No .mothership/ directory${NC}"
+            ISSUES=$((ISSUES + 1))
+        fi
+
+        # Check mothership.md
+        if [[ -f ".mothership/mothership.md" ]]; then
+            TOKENS=$(count_tokens ".mothership/mothership.md")
+            success ".mothership/mothership.md exists ($TOKENS tokens)"
+        else
+            echo -e "${RED}✗ No .mothership/mothership.md${NC}"
+            ISSUES=$((ISSUES + 1))
+        fi
+
+        # Check AI tool
+        if command -v amp &> /dev/null; then
+            success "AI tool detected: amp"
+        elif command -v claude &> /dev/null; then
+            success "AI tool detected: claude"
+        elif command -v cursor &> /dev/null; then
+            success "AI tool detected: cursor"
+        else
+            echo -e "${RED}✗ No AI CLI tool found (amp, claude, cursor)${NC}"
+            ISSUES=$((ISSUES + 1))
+        fi
+
+        # Check git
+        if git rev-parse --git-dir > /dev/null 2>&1; then
+            success "Git repository initialized"
+        else
+            echo -e "${RED}✗ Not a git repository${NC}"
+            ISSUES=$((ISSUES + 1))
+        fi
+
+        # Check docs
+        if [[ -d "docs" ]]; then
+            DOC_COUNT=$(find docs -name "*.md" 2>/dev/null | wc -l | tr -d ' ')
+            success "docs/ directory exists ($DOC_COUNT files)"
+        else
+            warn "No docs/ directory - create docs to enable planning"
+        fi
+
+        # Check codebase.md
+        if [[ -f ".mothership/codebase.md" ]]; then
+            success ".mothership/codebase.md exists"
+        else
+            warn "No codebase.md - run 'onboard' mode to create"
+        fi
+
+        # Check config
+        if [[ -f ".mothership/config.json" ]]; then
+            success ".mothership/config.json exists"
+        else
+            warn "No config.json - using defaults"
+        fi
+
+        echo ""
+        if [[ $ISSUES -eq 0 ]]; then
+            echo -e "${GREEN}Ready to launch! 🛸${NC}"
+        else
+            echo -e "${RED}$ISSUES issue(s) found. Fix before running.${NC}"
+        fi
+        echo ""
+        exit 0
+        ;;
+
+    trace)
+        echo ""
+        echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
+        echo -e "${BLUE}  🛸 Mothership Trace${NC}"
+        echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
+        echo ""
+
+        TRACE_MODE="${2:-build}"
+        echo -e "  Tracing mode: ${CYAN}$TRACE_MODE${NC}"
+        echo ""
+        echo "  Files loaded per iteration:"
+        echo ""
+
+        TOTAL=0
+
+        # Always load mothership.md
+        if [[ -f ".mothership/mothership.md" ]]; then
+            TOKENS=$(count_tokens ".mothership/mothership.md")
+            TOTAL=$((TOTAL + TOKENS))
+            printf "    %-28s %6d tokens\n" ".mothership/mothership.md" "$TOKENS"
+        fi
+
+        # Always load checkpoint if exists
+        if [[ -f ".mothership/checkpoint.md" ]]; then
+            TOKENS=$(count_tokens ".mothership/checkpoint.md")
+            TOTAL=$((TOTAL + TOKENS))
+            printf "    %-28s %6d tokens\n" ".mothership/checkpoint.md" "$TOKENS"
+        fi
+
+        # Load codebase.md for build/test modes
+        if [[ "$TRACE_MODE" == "build" || "$TRACE_MODE" == "test" ]]; then
+            if [[ -f ".mothership/codebase.md" ]]; then
+                TOKENS=$(count_tokens ".mothership/codebase.md")
+                TOTAL=$((TOTAL + TOKENS))
+                printf "    %-28s %6d tokens\n" ".mothership/codebase.md" "$TOKENS"
+            fi
+        fi
+
+        echo ""
+        echo -e "${BLUE}───────────────────────────────────────────────────────${NC}"
+        printf "    %-28s ${GREEN}%6d tokens${NC}\n" "TOTAL" "$TOTAL"
+        echo -e "${BLUE}───────────────────────────────────────────────────────${NC}"
+        echo ""
+        exit 0
+        ;;
+
     -h|--help|help)
         echo "Usage: ./mothership.sh [mode] [max_iterations]"
         echo ""
@@ -49,11 +225,16 @@ case "$MODE" in
         echo "  test [n]        Run and fix tests (default: 10 iterations)"
         echo "  review          Review code quality"
         echo ""
+        echo "Tooling:"
+        echo "  benchmark       Show token counts for your setup"
+        echo "  doctor          Diagnose setup issues"
+        echo "  trace [mode]    Show what gets loaded for a mode"
+        echo ""
         echo "Examples:"
         echo "  ./mothership.sh plan \"user authentication\""
         echo "  ./mothership.sh build 20"
-        echo "  ./mothership.sh test 5"
-        echo "  ./mothership.sh review"
+        echo "  ./mothership.sh benchmark"
+        echo "  ./mothership.sh doctor"
         echo ""
         echo "Environment:"
         echo "  AI_TOOL    Override AI CLI detection (default: auto-detect)"
@@ -116,13 +297,11 @@ Or set AI_TOOL environment variable:
   AI_TOOL=my-ai-cli ./mothership.sh build"
 fi
 
-# Detect version (shard → array → matrix)
-if [[ -d ".mothership/agents/enterprise" ]]; then
-    VERSION="matrix"
-elif [[ -d ".mothership/agents" ]]; then
-    VERSION="array"
+# Detect if specialized agents are installed
+if [[ -d ".mothership/agents" ]]; then
+    VERSION="agents"
 else
-    VERSION="shard"
+    VERSION="core"
 fi
 
 # Archive previous run if exists
@@ -196,7 +375,7 @@ for ((i=1; i<=MAX_ITERATIONS; i++)); do
     echo '```' >> progress.md
     
     # Check for completion signals (various formats)
-    if echo "$OUTPUT" | grep -qE "<(mothership|vector|cortex|cipher|sentinel|arbiter|conductor|coalition|vault|telemetry)>($SIGNALS)<"; then
+    if echo "$OUTPUT" | grep -qE "<(mothership|vector|cortex|cipher|sentinel)>($SIGNALS)<"; then
         echo ""
         success "Mothership complete! Finished at iteration $i."
         echo "$(date '+%Y-%m-%d %H:%M:%S') - Completed at iteration $i" >> progress.md

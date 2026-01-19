@@ -21,61 +21,34 @@ The user should be able to:
 
 ## Try It
 
-### Using Shard (simplest)
-
 ```bash
 cd example
-cp ../shard/mothership.md .mothership/
+
+# Verify setup
+../mothership.sh doctor
+
+# Check token usage
+../mothership.sh benchmark
 
 # Plan the feature
 "Read .mothership/mothership.md and run: plan user onboarding flow"
 
-# Build stories one at a time
-./mothership.sh build 10
+# Build stories one at a time (loops until done)
+../mothership.sh build 10
 
 # Test
-./mothership.sh test 10
+../mothership.sh test 10
 
 # Review
 "Read .mothership/mothership.md and run: review"
 ```
 
-### Using Array (specialized agents)
+### Optional: Add Specialized Agents
+
+If you want dedicated agents for each mode:
 
 ```bash
-cd example
-cp -r ../array/* .mothership/
-
-# Plan
-"Read .mothership/mothership.md and run: plan user onboarding flow"
-
-# Build
-./mothership.sh build 10
-
-# Test
-./mothership.sh test 10
-
-# Review
-"Read .mothership/mothership.md and run: review"
-```
-
-### Using Matrix (enterprise)
-
-```bash
-cd example
-cp -r ../matrix/* .mothership/
-
-# Plan
-"Read .mothership/mothership.md and run: plan user onboarding flow"
-
-# Build
-./mothership.sh build 10
-
-# Test
-./mothership.sh test 10
-
-# Review
-"Read .mothership/mothership.md and run: review"
+cp ../agents/*.md .mothership/agents/
 ```
 
 ## Files
@@ -83,9 +56,9 @@ cp -r ../matrix/* .mothership/
 ```
 example/
 ├── .mothership/
-│   ├── mothership.md    # (copy from shard/, array/, or matrix/)
-│   ├── config.json      # (if using array/ or matrix/)
-│   └── checkpoint.md    # (created automatically)
+│   ├── mothership.md    # The prompt
+│   ├── config.json      # Settings (Linear or local)
+│   └── checkpoint.md    # Current state (auto-created)
 ├── docs/
 │   └── onboarding.md    # Feature requirements
 ├── package.json         # Project config
