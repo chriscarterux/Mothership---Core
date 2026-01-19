@@ -322,12 +322,14 @@ if [ -f ".mothership/checkpoint.md" ]; then
     fi
 fi
 
-# Set completion signals based on mode (supports both verbose and compressed)
+# Set completion signals based on mode
+# BUILD-COMPLETE = no more stories to build (stop looping)
+# BUILT:* = one story done (continue to next iteration)
 case "$MODE" in
-    build)  SIGNALS="BUILD-COMPLETE|COMPLETE|B:[^<]+|C" ;;
-    test)   SIGNALS="TEST-COMPLETE|COMPLETE|T:[^<]+" ;;
-    plan)   SIGNALS="PLANNED|P:[0-9]+"; MAX_ITERATIONS=1 ;;
-    review) SIGNALS="APPROVED|NEEDS-WORK|A|NW"; MAX_ITERATIONS=1 ;;
+    build)  COMPLETE_SIGNALS="BUILD-COMPLETE" ;;
+    test)   COMPLETE_SIGNALS="TEST-COMPLETE" ;;
+    plan)   COMPLETE_SIGNALS="PLANNED:[0-9]+|PLANNED"; MAX_ITERATIONS=1 ;;
+    review) COMPLETE_SIGNALS="APPROVED|NEEDS-WORK"; MAX_ITERATIONS=1 ;;
 esac
 
 # Header
@@ -374,16 +376,10 @@ for ((i=1; i<=MAX_ITERATIONS; i++)); do
     echo "$OUTPUT" | tail -50 >> progress.md
     echo '```' >> progress.md
     
-    # Check for completion signals (various formats)
-    if echo "$OUTPUT" | grep -qE "<(mothership|vector|cortex|cipher|sentinel)>($SIGNALS)<"; then
-        echo ""
-        success "Mothership Core complete! Finished at iteration $i."
-        echo "$(date '+%Y-%m-%d %H:%M:%S') - Completed at iteration $i" >> progress.md
-        exit 0
-    fi
-    
-    # Also check for signal without tags (flexibility)
-    if echo "$OUTPUT" | grep -qE "($SIGNALS)"; then
+    # Check for completion signals (must be in proper <agent>SIGNAL</agent> format)
+    # BUILD-COMPLETE means no more stories - stop the loop
+    # BUILT:ID means one story done - continue to next iteration
+    if echo "$OUTPUT" | grep -qE "<(mothership|vector|cortex|cipher|sentinel)>($COMPLETE_SIGNALS)</"; then
         echo ""
         success "Mothership Core complete! Finished at iteration $i."
         echo "$(date '+%Y-%m-%d %H:%M:%S') - Completed at iteration $i" >> progress.md
