@@ -1,0 +1,88 @@
+{
+  "feature": "User Authentication",
+  "branch": "feat/user-auth",
+  "created": "2024-01-15",
+  "stories": [
+    {
+      "id": "1",
+      "title": "User can see login page",
+      "priority": 1,
+      "status": "done",
+      "ac": [
+        "Page accessible at /login",
+        "Shows email input field",
+        "Shows password input field",
+        "Shows submit button",
+        "Shows 'Forgot password?' link"
+      ],
+      "files": ["app/login/page.tsx"],
+      "notes": "Use existing Button component from components/ui"
+    },
+    {
+      "id": "2",
+      "title": "User can submit login form",
+      "priority": 2,
+      "status": "done",
+      "ac": [
+        "Form validates email format",
+        "Form requires password",
+        "Submit shows loading state",
+        "Success redirects to /dashboard",
+        "Error shows message"
+      ],
+      "files": ["app/login/page.tsx", "app/api/auth/login/route.ts"],
+      "notes": "Use server action pattern from existing forms"
+    },
+    {
+      "id": "3",
+      "title": "User can see signup page",
+      "priority": 3,
+      "status": "ready",
+      "ac": [
+        "Page accessible at /signup",
+        "Shows email, password, confirm password fields",
+        "Shows submit button",
+        "Shows 'Already have account?' link to /login"
+      ],
+      "files": ["app/signup/page.tsx"]
+    },
+    {
+      "id": "4",
+      "title": "User can submit signup form",
+      "priority": 4,
+      "status": "ready",
+      "ac": [
+        "Validates email format",
+        "Password minimum 8 characters",
+        "Passwords must match",
+        "Success redirects to /onboarding",
+        "Error shows message"
+      ],
+      "files": ["app/signup/page.tsx", "app/api/auth/signup/route.ts"]
+    },
+    {
+      "id": "5",
+      "title": "User can log out",
+      "priority": 5,
+      "status": "ready",
+      "ac": [
+        "Logout button in header when logged in",
+        "Clears session/cookies",
+        "Redirects to /"
+      ],
+      "files": ["components/Header.tsx", "app/api/auth/logout/route.ts"]
+    },
+    {
+      "id": "6",
+      "title": "Protected routes redirect to login",
+      "priority": 6,
+      "status": "ready",
+      "ac": [
+        "/dashboard redirects to /login if not authenticated",
+        "After login, returns to original destination",
+        "Middleware checks auth on protected routes"
+      ],
+      "files": ["middleware.ts"]
+    }
+  ]
+}

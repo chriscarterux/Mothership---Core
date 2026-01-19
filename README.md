@@ -8,23 +8,34 @@
 
 ---
 
-## Quick Start: Assimilate
+## Quick Start
 
+### Option 1: One-Line Install
+```bash
+curl -fsSL https://raw.githubusercontent.com/chriscarterux/Mothership/main/install.sh | bash
+```
+
+### Option 2: Smart Assimilation
 Tell your AI:
 ```
-Read https://raw.githubusercontent.com/chriscarterux/Mothership/main/ASSIMILATE.md and integrate Mothership into this project
+Read https://raw.githubusercontent.com/chriscarterux/Mothership/main/ASSIMILATE.md and integrate Mothership
 ```
 
-The Mothership will:
-1. **Scan** your environment (language, existing tools, repo state)
-2. **Ask** only what it can't detect (state backend, AI tool, version)
-3. **Configure** customized setup for your project
-4. **Onboard** by learning your codebase patterns
+The Mothership will scan your environment and configure itself.
+
+### Then Run
+```bash
+# Plan a feature
+"Read .mothership/mothership.md and run: plan user authentication"
+
+# Build it (loops until done)
+./mothership.sh build 20
+```
 
 Supports:
-- **State backends:** Linear, Jira, GitHub Issues, Notion, Trello, local JSON
-- **AI tools:** Amp, Claude, Cursor, OpenAI, or any LLM
-- **Projects:** New repos or existing codebases
+- **State:** Linear, Jira, GitHub Issues, Notion, Trello, local JSON
+- **AI tools:** Any CLI (auto-detects amp, claude, cursor)
+- **Projects:** New or existing codebases
 
 ---
 
