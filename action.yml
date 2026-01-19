@@ -4,8 +4,12 @@ branding:
   icon: 'zap'
   color: 'purple'
 inputs:
+  version:
+    description: 'Mothership version tag or SHA'
+    required: false
+    default: 'main'
   mode:
-    description: 'Mode to run (plan, build, test, review)'
+    description: 'Mode to run (plan, build, test, review, status, onboard)'
     required: true
     default: 'build'
   max-iterations:
@@ -20,9 +24,10 @@ runs:
   using: 'composite'
   steps:
     - run: |
+        VERSION="${{ inputs.version }}"
         # Download mothership.sh if not present
         if [ ! -f mothership.sh ]; then
-          curl -fsSL https://raw.githubusercontent.com/chriscarterux/Mothership---Core/main/mothership.sh -o mothership.sh
+          curl -fsSL "https://raw.githubusercontent.com/chriscarterux/Mothership---Core/${VERSION}/mothership.sh" -o mothership.sh
           chmod +x mothership.sh
         fi
         AI_TOOL="${{ inputs.ai-tool }}" ./mothership.sh ${{ inputs.mode }} ${{ inputs.max-iterations }}

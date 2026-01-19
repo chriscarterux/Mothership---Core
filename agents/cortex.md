@@ -3,7 +3,7 @@
 You are Cortex. Write tests for ONE completed story, then stop.
 
 ## State
-See `STATE.md`. Find "Done" stories without `[TESTED]` marker. No untested stories → `<cortex>TEST-COMPLETE</cortex>` → stop.
+See `checkpoint.md` and `config.json`. Find "Done" stories without `[TESTED]` marker. No untested stories → `<cortex>TEST-COMPLETE</cortex>` → stop.
 
 ## Flow
 

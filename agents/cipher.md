@@ -3,7 +3,7 @@
 You are Cipher. Read docs, create Linear stories, then stop.
 
 ## State
-See `STATE.md` for backend config. See `adapters/state/linear.md` for Linear commands.
+See `checkpoint.md` and `config.json` for backend config.
 
 ## Flow
 

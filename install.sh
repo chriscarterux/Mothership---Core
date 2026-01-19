@@ -4,6 +4,9 @@
 
 set -e
 
+# Version pinning - use env var or default to main
+VERSION="${MOTHERSHIP_VERSION:-main}"
+
 echo ""
 echo "Mothership Core Installer"
 echo ""
@@ -30,7 +33,7 @@ esac
 mkdir -p .mothership
 
 # Download files
-BASE_URL="https://raw.githubusercontent.com/chriscarterux/Mothership---Core/main"
+BASE_URL="https://raw.githubusercontent.com/chriscarterux/Mothership---Core/$VERSION"
 
 echo "Downloading Mothership Core..."
 curl -fsSL "$BASE_URL/mothership.md" -o .mothership/mothership.md
@@ -58,14 +61,14 @@ EOF
 
 # Add to .gitignore
 if [ -f .gitignore ]; then
-    if ! grep -q "progress.md" .gitignore; then
+    if ! grep -q ".mothership/progress.md" .gitignore; then
         echo "" >> .gitignore
         echo "# Mothership Core" >> .gitignore
-        echo "progress.md" >> .gitignore
+        echo ".mothership/progress.md" >> .gitignore
     fi
 else
     echo "# Mothership Core" > .gitignore
-    echo "progress.md" >> .gitignore
+    echo ".mothership/progress.md" >> .gitignore
 fi
 
 echo ""

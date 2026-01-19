@@ -62,7 +62,11 @@ Status: `ready` → `in_progress` → `done` | `blocked`
 5. Read story acceptance criteria
 6. Find similar code in codebase, follow patterns
 7. Implement (type-check after each file)
-8. Run: `npm run type-check && npm run lint && npm run test`
+8. Run commands from `.mothership/config.json` (if exists):
+   - `commands.typecheck`
+   - `commands.lint`
+   - `commands.test`
+   Default (no config): `npm run typecheck && npm run lint && npm run test`
 9. If fail → fix → repeat
 10. Commit: `[STORY-ID] [title]`
 11. Push branch
@@ -119,10 +123,11 @@ cat .mothership/checkpoint.md
 
 Query Linear:
 - Ready: [count]
-- In Progress: [count]  
+- In Progress: [count]
 - Done: [count]
 
 Output summary and next action.
+Output: `<mothership>STATUS-COMPLETE</mothership>`
 
 ---
 
@@ -135,6 +140,7 @@ Structure: [pages, components, api locations]
 Patterns: [1-2 example files]
 Commands: [typecheck, lint, test, build]
 ```
+Output: `<mothership>ONBOARD-COMPLETE</mothership>`
 
 ---
 
@@ -162,6 +168,8 @@ All signals MUST use the `<mothership>SIGNAL</mothership>` format.
 | `TEST-COMPLETE` | No more stories to test | **Stop** the loop |
 | `APPROVED` | Review passed | Stop (review is one-shot) |
 | `NEEDS-WORK:[issues]` | Changes needed | Stop (review is one-shot) |
+| `STATUS-COMPLETE` | Status reported | Stop (status is one-shot) |
+| `ONBOARD-COMPLETE` | Codebase.md created | Stop (onboard is one-shot) |
 
 **Important:** Output `BUILT:[ID]` after completing each story. Only output `BUILD-COMPLETE` when there are no more "Ready" stories to build.
 

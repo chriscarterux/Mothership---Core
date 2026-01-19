@@ -30,14 +30,16 @@ success() {
     echo -e "${GREEN}✓ $1${NC}"
 }
 
-trap 'echo -e "\n\n${YELLOW}🛸 Interrupted. Progress saved to progress.md${NC}"; exit 130' INT
+trap 'echo -e "\n\n${YELLOW}🛸 Interrupted. Progress saved to .mothership/progress.md${NC}"; exit 130' INT
 
 # Parse arguments
 MODE="${1:-build}"
 MAX_ITERATIONS="${2:-10}"
 PLAN_CONTEXT="$2"
 
-# Token counting function (words * 1.3 approximation)
+# Token counting (approximate: words × 1.3)
+# Actual tokens may vary ~20% based on content structure
+# Does not include docs/code context loaded by AI tool
 count_tokens() {
     local file="$1"
     if [[ -f "$file" ]]; then
@@ -50,7 +52,7 @@ count_tokens() {
 
 # Validate mode
 case "$MODE" in
-    build|test|plan|review) ;;
+    build|test|plan|review|status|onboard) ;;
 
     benchmark)
         echo ""
@@ -87,7 +89,7 @@ case "$MODE" in
 
         # Cost calculation (Claude Sonnet: $3/1M input tokens)
         COST=$(echo "scale=4; $TOTAL * 3 / 1000000" | bc 2>/dev/null || echo "0.004")
-        echo -e "  Estimated cost/run: ${CYAN}\$${COST}${NC} (Claude Sonnet)"
+        echo -e "  Estimated cost/run: ${CYAN}~\$${COST}${NC} (approximate, Claude Sonnet)"
         echo ""
         exit 0
         ;;
@@ -224,6 +226,8 @@ case "$MODE" in
         echo "  build [n]       Build features (default: 10 iterations)"
         echo "  test [n]        Run and fix tests (default: 10 iterations)"
         echo "  review          Review code quality"
+        echo "  status          Report current project state"
+        echo "  onboard         Scan project and create codebase.md"
         echo ""
         echo "Tooling:"
         echo "  benchmark       Show token counts for your setup"
@@ -244,7 +248,7 @@ case "$MODE" in
     *)
         error "Unknown mode: '$MODE'
 
-Available modes: plan, build, test, review
+Available modes: plan, build, test, review, status, onboard
 Run './mothership.sh --help' for usage"
         ;;
 esac
@@ -317,7 +321,7 @@ if [ -f ".mothership/checkpoint.md" ]; then
             mkdir -p "$ARCHIVE_FOLDER"
             [ -f ".mothership/checkpoint.md" ] && cp .mothership/checkpoint.md "$ARCHIVE_FOLDER/"
             [ -f ".mothership/stories.json" ] && cp .mothership/stories.json "$ARCHIVE_FOLDER/"
-            [ -f "progress.md" ] && cp progress.md "$ARCHIVE_FOLDER/"
+            [ -f ".mothership/progress.md" ] && cp .mothership/progress.md "$ARCHIVE_FOLDER/"
         fi
     fi
 fi
@@ -328,8 +332,10 @@ fi
 case "$MODE" in
     build)  COMPLETE_SIGNALS="BUILD-COMPLETE" ;;
     test)   COMPLETE_SIGNALS="TEST-COMPLETE" ;;
-    plan)   COMPLETE_SIGNALS="PLANNED:[0-9]+|PLANNED"; MAX_ITERATIONS=1 ;;
-    review) COMPLETE_SIGNALS="APPROVED|NEEDS-WORK"; MAX_ITERATIONS=1 ;;
+    plan)    COMPLETE_SIGNALS="PLANNED:[0-9]+|PLANNED"; MAX_ITERATIONS=1 ;;
+    review)  COMPLETE_SIGNALS="APPROVED|NEEDS-WORK"; MAX_ITERATIONS=1 ;;
+    status)  COMPLETE_SIGNALS="STATUS-COMPLETE"; MAX_ITERATIONS=1 ;;
+    onboard) COMPLETE_SIGNALS="ONBOARD-COMPLETE"; MAX_ITERATIONS=1 ;;
 esac
 
 # Header
@@ -345,7 +351,7 @@ echo -e "  AI Tool:    ${CYAN}$AI_CMD${NC}"
 echo ""
 
 # Initialize progress log
-echo "$(date '+%Y-%m-%d %H:%M:%S') - Starting $MODE mode" >> progress.md
+echo "$(date '+%Y-%m-%d %H:%M:%S') - Starting $MODE mode" >> .mothership/progress.md
 
 for ((i=1; i<=MAX_ITERATIONS; i++)); do
     echo -e "${BLUE}───────────────────────────────────────────────────────${NC}"
@@ -366,15 +372,19 @@ for ((i=1; i<=MAX_ITERATIONS; i++)); do
             exit 130  # User interrupted
         fi
         warn "AI tool exited with code $EXIT_CODE"
+        # If AI tool failed AND output is empty, that's an error
+        if [[ -z "$OUTPUT" ]]; then
+            error "AI tool failed with no output (exit code: $EXIT_CODE)"
+        fi
     }
     echo "$OUTPUT"
-    
+
     # Log to progress.md
-    echo "" >> progress.md
-    echo "### Iteration $i - $(date '+%H:%M:%S')" >> progress.md
-    echo '```' >> progress.md
-    echo "$OUTPUT" | tail -50 >> progress.md
-    echo '```' >> progress.md
+    echo "" >> .mothership/progress.md
+    echo "### Iteration $i - $(date '+%H:%M:%S')" >> .mothership/progress.md
+    echo '```' >> .mothership/progress.md
+    echo "$OUTPUT" | tail -50 >> .mothership/progress.md
+    echo '```' >> .mothership/progress.md
     
     # Check for completion signals (must be in proper <agent>SIGNAL</agent> format)
     # BUILD-COMPLETE means no more stories - stop the loop
@@ -382,7 +392,7 @@ for ((i=1; i<=MAX_ITERATIONS; i++)); do
     if echo "$OUTPUT" | grep -qE "<(mothership|vector|cortex|cipher|sentinel)>($COMPLETE_SIGNALS)</"; then
         echo ""
         success "Mothership Core complete! Finished at iteration $i."
-        echo "$(date '+%Y-%m-%d %H:%M:%S') - Completed at iteration $i" >> progress.md
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - Completed at iteration $i" >> .mothership/progress.md
         exit 0
     fi
     
@@ -390,7 +400,7 @@ for ((i=1; i<=MAX_ITERATIONS; i++)); do
     if echo "$OUTPUT" | grep -qE "BLOCKED|X:[^<]+"; then
         echo ""
         warn "Agent reported BLOCKED. Check output above for details."
-        echo "$(date '+%Y-%m-%d %H:%M:%S') - Blocked at iteration $i" >> progress.md
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - Blocked at iteration $i" >> .mothership/progress.md
         exit 1
     fi
     
@@ -404,9 +414,9 @@ echo ""
 warn "Reached max iterations ($MAX_ITERATIONS)"
 echo ""
 echo "Next steps:"
-echo "  1. Check progress.md for status"
+echo "  1. Check .mothership/progress.md for status"
 echo "  2. Run again with more iterations: ./mothership.sh $MODE $((MAX_ITERATIONS * 2))"
 echo "  3. Check .mothership/checkpoint.md for current state"
 echo ""
-echo "$(date '+%Y-%m-%d %H:%M:%S') - Reached max iterations" >> progress.md
+echo "$(date '+%Y-%m-%d %H:%M:%S') - Reached max iterations" >> .mothership/progress.md
 exit 1

@@ -82,7 +82,11 @@ Status: `ready` | `in_progress` | `done` | `blocked`. Update by editing JSON dir
 5. Read story acceptance criteria
 6. Find similar code in codebase, follow patterns
 7. Implement (type-check after each file)
-8. Run: `npm run type-check && npm run lint && npm run test`
+8. Run commands from `.mothership/config.json` (if exists):
+   - `commands.typecheck`
+   - `commands.lint`
+   - `commands.test`
+   Default (no config): `npm run typecheck && npm run lint && npm run test`
 9. If fail → fix → repeat
 10. Commit: `[STORY-ID] [title]`
 11. Push branch
