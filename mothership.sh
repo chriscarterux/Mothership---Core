@@ -1,27 +1,116 @@
 #!/bin/bash
 # Mothership Loop - Iterative build/test/plan automation
-# Works with any AI CLI tool (amp, claude, cursor, openai, etc.)
+# Works with any AI CLI tool (claude, cursor, aider, openai, etc.)
 
 set -e
-trap 'echo -e "\n\n🛸 Mothership interrupted. Progress saved to progress.md"; exit 130' INT
 
+# Colors for better readability
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Error handling
+error() {
+    echo -e "${RED}🛸 Error: $1${NC}" >&2
+    exit 1
+}
+
+warn() {
+    echo -e "${YELLOW}⚠️  $1${NC}"
+}
+
+info() {
+    echo -e "${CYAN}🛸 $1${NC}"
+}
+
+success() {
+    echo -e "${GREEN}✓ $1${NC}"
+}
+
+trap 'echo -e "\n\n${YELLOW}🛸 Interrupted. Progress saved to progress.md${NC}"; exit 130' INT
+
+# Parse arguments
 MODE="${1:-build}"
 MAX_ITERATIONS="${2:-10}"
 PLAN_CONTEXT="$2"
 
+# Validate mode
+case "$MODE" in
+    build|test|plan|review) ;;
+    -h|--help|help)
+        echo "Usage: ./mothership.sh [mode] [max_iterations]"
+        echo ""
+        echo "Modes:"
+        echo "  plan [feature]  Create stories from feature description"
+        echo "  build [n]       Build features (default: 10 iterations)"
+        echo "  test [n]        Run and fix tests (default: 10 iterations)"
+        echo "  review          Review code quality"
+        echo ""
+        echo "Examples:"
+        echo "  ./mothership.sh plan \"user authentication\""
+        echo "  ./mothership.sh build 20"
+        echo "  ./mothership.sh test 5"
+        echo "  ./mothership.sh review"
+        echo ""
+        echo "Environment:"
+        echo "  AI_TOOL    Override AI CLI detection (default: auto-detect)"
+        echo "             Example: AI_TOOL=claude ./mothership.sh build"
+        exit 0
+        ;;
+    *)
+        error "Unknown mode: '$MODE'
+
+Available modes: plan, build, test, review
+Run './mothership.sh --help' for usage"
+        ;;
+esac
+
+# Check for .mothership directory
+if [[ ! -d ".mothership" ]]; then
+    error "No .mothership/ directory found
+
+To set up Mothership, run:
+  curl -fsSL https://raw.githubusercontent.com/chriscarterux/Mothership/main/install.sh | bash
+
+Or manually create .mothership/ with mothership.md"
+fi
+
+# Check for mothership.md
+if [[ ! -f ".mothership/mothership.md" ]]; then
+    error "No .mothership/mothership.md found
+
+Run the installer to set up:
+  curl -fsSL https://raw.githubusercontent.com/chriscarterux/Mothership/main/install.sh | bash"
+fi
+
 # Detect AI tool (set AI_TOOL env var or auto-detect)
 if [[ -n "$AI_TOOL" ]]; then
     AI_CMD="$AI_TOOL"
-elif command -v amp &> /dev/null; then
-    AI_CMD="amp"
+    if ! command -v "$AI_CMD" &> /dev/null; then
+        error "AI tool '$AI_CMD' not found in PATH
+
+Either:
+  1. Install $AI_CMD
+  2. Set AI_TOOL to a valid CLI tool
+  3. Add $AI_CMD to your PATH"
+    fi
 elif command -v claude &> /dev/null; then
     AI_CMD="claude"
 elif command -v cursor &> /dev/null; then
     AI_CMD="cursor"
 else
-    echo "🛸 No AI CLI tool found. Set AI_TOOL env var or install amp/claude/cursor."
-    echo "   Example: AI_TOOL='my-ai-cli' ./mothership.sh build"
-    exit 1
+    error "No AI CLI tool found
+
+Install one of:
+  • claude  - https://claude.ai/code
+  • cursor  - https://cursor.sh
+  • aider   - https://aider.chat
+
+Or set AI_TOOL environment variable:
+  AI_TOOL=my-ai-cli ./mothership.sh build"
 fi
 
 # Detect version
@@ -34,15 +123,13 @@ fi
 # Archive previous run if exists
 ARCHIVE_DIR=".mothership/archive"
 if [ -f ".mothership/checkpoint.md" ]; then
-    # Read current project from checkpoint
-    CURRENT_PROJECT=$(grep "^project:" .mothership/checkpoint.md | cut -d' ' -f2-)
+    CURRENT_PROJECT=$(grep "^project:" .mothership/checkpoint.md 2>/dev/null | cut -d' ' -f2- || echo "")
     if [ -n "$CURRENT_PROJECT" ] && [ "$CURRENT_PROJECT" != "null" ]; then
         DATE=$(date +%Y-%m-%d)
         ARCHIVE_FOLDER="$ARCHIVE_DIR/$DATE-$(echo $CURRENT_PROJECT | tr ' ' '-' | tr '[:upper:]' '[:lower:]')"
         
-        # Only archive if this looks like a different project
         if [ ! -d "$ARCHIVE_FOLDER" ]; then
-            echo "📦 Archiving previous run: $CURRENT_PROJECT"
+            info "Archiving previous run: $CURRENT_PROJECT"
             mkdir -p "$ARCHIVE_FOLDER"
             [ -f ".mothership/checkpoint.md" ] && cp .mothership/checkpoint.md "$ARCHIVE_FOLDER/"
             [ -f ".mothership/stories.json" ] && cp .mothership/stories.json "$ARCHIVE_FOLDER/"
@@ -57,18 +144,27 @@ case "$MODE" in
     test)   SIGNALS="TEST-COMPLETE|COMPLETE" ;;
     plan)   SIGNALS="PLANNED"; MAX_ITERATIONS=1 ;;
     review) SIGNALS="APPROVED|NEEDS-WORK"; MAX_ITERATIONS=1 ;;
-    *)      echo "Usage: ./mothership.sh [build|test|plan|review] [max_iterations|context]"; exit 1 ;;
 esac
 
-echo "🛸 Mothership Loop - Mode: $MODE, Max: $MAX_ITERATIONS iterations"
-echo "   Version: $VERSION | AI Tool: $AI_CMD"
+# Header
 echo ""
+echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
+echo -e "${BLUE}  🛸 Mothership Loop${NC}"
+echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
+echo ""
+echo -e "  Mode:       ${CYAN}$MODE${NC}"
+echo -e "  Iterations: ${CYAN}$MAX_ITERATIONS${NC}"
+echo -e "  Version:    ${CYAN}$VERSION${NC}"
+echo -e "  AI Tool:    ${CYAN}$AI_CMD${NC}"
+echo ""
+
+# Initialize progress log
 echo "$(date '+%Y-%m-%d %H:%M:%S') - Starting $MODE mode" >> progress.md
 
 for ((i=1; i<=MAX_ITERATIONS; i++)); do
-    echo "═══════════════════════════════════════════════════════"
-    echo " Iteration $i of $MAX_ITERATIONS"
-    echo "═══════════════════════════════════════════════════════"
+    echo -e "${BLUE}───────────────────────────────────────────────────────${NC}"
+    echo -e " Iteration ${CYAN}$i${NC} of ${CYAN}$MAX_ITERATIONS${NC}"
+    echo -e "${BLUE}───────────────────────────────────────────────────────${NC}"
     
     # Build the prompt
     if [[ "$MODE" == "plan" && -n "$PLAN_CONTEXT" ]]; then
@@ -78,7 +174,13 @@ for ((i=1; i<=MAX_ITERATIONS; i++)); do
     fi
     
     # Run AI tool and capture output
-    OUTPUT=$(echo "$PROMPT" | $AI_CMD 2>&1) || true
+    OUTPUT=$(echo "$PROMPT" | $AI_CMD 2>&1) || {
+        EXIT_CODE=$?
+        if [ $EXIT_CODE -eq 130 ]; then
+            exit 130  # User interrupted
+        fi
+        warn "AI tool exited with code $EXIT_CODE"
+    }
     echo "$OUTPUT"
     
     # Log to progress.md
@@ -91,7 +193,7 @@ for ((i=1; i<=MAX_ITERATIONS; i++)); do
     # Check for completion signals (various formats)
     if echo "$OUTPUT" | grep -qE "<(mothership|drone|probe|oracle|overseer)>($SIGNALS)<"; then
         echo ""
-        echo "🛸 Mothership complete! Finished at iteration $i."
+        success "Mothership complete! Finished at iteration $i."
         echo "$(date '+%Y-%m-%d %H:%M:%S') - Completed at iteration $i" >> progress.md
         exit 0
     fi
@@ -99,18 +201,32 @@ for ((i=1; i<=MAX_ITERATIONS; i++)); do
     # Also check for signal without tags (flexibility)
     if echo "$OUTPUT" | grep -qE "($SIGNALS)"; then
         echo ""
-        echo "🛸 Mothership complete! Finished at iteration $i."
+        success "Mothership complete! Finished at iteration $i."
         echo "$(date '+%Y-%m-%d %H:%M:%S') - Completed at iteration $i" >> progress.md
         exit 0
     fi
     
+    # Check for blocked signal
+    if echo "$OUTPUT" | grep -qE "BLOCKED"; then
+        echo ""
+        warn "Agent reported BLOCKED. Check output above for details."
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - Blocked at iteration $i" >> progress.md
+        exit 1
+    fi
+    
     echo ""
-    echo "Iteration $i complete. Continuing..."
+    info "Iteration $i complete. Continuing..."
     echo ""
     sleep 1
 done
 
 echo ""
-echo "🛸 Mothership reached max iterations ($MAX_ITERATIONS). Review progress.md for status."
+warn "Reached max iterations ($MAX_ITERATIONS)"
+echo ""
+echo "Next steps:"
+echo "  1. Check progress.md for status"
+echo "  2. Run again with more iterations: ./mothership.sh $MODE $((MAX_ITERATIONS * 2))"
+echo "  3. Check .mothership/checkpoint.md for current state"
+echo ""
 echo "$(date '+%Y-%m-%d %H:%M:%S') - Reached max iterations" >> progress.md
 exit 1

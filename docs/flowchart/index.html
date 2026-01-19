@@ -3,165 +3,460 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MOTHERSHIP // Agent Command Flow</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Mothership - Interactive Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg: #09090b;
+            --bg-subtle: #18181b;
+            --bg-muted: #27272a;
+            --border: #3f3f46;
+            --text: #fafafa;
+            --text-muted: #a1a1aa;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.25rem;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: var(--success);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Main */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 48px 32px;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: var(--text-muted);
+        }
+
+        /* Flowchart */
+        .flowchart {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 48px;
+            overflow-x: auto;
+            padding: 20px 0;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .step:hover {
+            transform: translateY(-4px);
+        }
+
+        .step.active .step-icon {
+            border-color: var(--accent);
+            box-shadow: 0 0 24px rgba(59, 130, 246, 0.4);
+        }
+
+        .step-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--bg-subtle);
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+
+        .step:hover .step-icon {
+            border-color: var(--text-muted);
+        }
+
+        .step-label {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .step-agent {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .connector {
+            width: 60px;
+            height: 2px;
+            background: var(--border);
+            position: relative;
+            margin: 0 -8px;
+            margin-bottom: 36px;
+        }
+
+        .connector::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -3px;
+            border: solid var(--border);
+            border-width: 0 2px 2px 0;
+            padding: 3px;
+            transform: rotate(-45deg);
+        }
+
+        /* Details Panel */
+        .details-panel {
+            background: var(--bg-subtle);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .details-panel.active {
+            border-color: var(--accent);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-icon {
+            font-size: 1.5rem;
+        }
+
+        .panel-title {
+            flex: 1;
+            font-weight: 600;
+            font-size: 1.125rem;
+        }
+
+        .panel-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .panel-close:hover {
+            color: var(--text);
+        }
+
+        .panel-content {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            padding: 24px;
+        }
+
+        .detail-section h3 {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .detail-section p {
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .terminal {
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--success);
+        }
+
+        .terminal code {
+            display: block;
+            white-space: pre-wrap;
+        }
+
+        .time-display {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .time-value {
+            font-size: 2rem;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .time-unit {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 32px;
+            border-top: 1px solid var(--border);
+            margin-top: 48px;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .flowchart {
+                flex-wrap: wrap;
+                gap: 16px;
+            }
+            .connector { display: none; }
+            .panel-content {
+                grid-template-columns: 1fr;
+            }
+            .step-icon {
+                width: 64px;
+                height: 64px;
+                font-size: 1.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="starfield" id="starfield"></div>
-    <div class="scan-line"></div>
-    
-    <header class="header">
-        <div class="logo">
-            <span class="logo-icon">👽</span>
-            <span class="logo-text">MOTHERSHIP</span>
-        </div>
-        <div class="status-bar">
+    <header>
+        <a href="../" class="logo">
+            <span>🛸</span>
+            <span>Mothership</span>
+        </a>
+        <div class="status">
             <span class="status-dot"></span>
-            <span>SYSTEMS ONLINE</span>
+            Systems Online
         </div>
     </header>
 
-    <main class="main-container">
-        <h1 class="title">AGENT COMMAND FLOW</h1>
-        <p class="subtitle">// Sequential execution protocol for autonomous operations</p>
+    <main>
+        <div class="page-header">
+            <h1>Agent Command Flow</h1>
+            <p>Click any phase to see how it works</p>
+        </div>
 
-        <div class="flowchart-container">
-            <div class="progress-track">
-                <div class="progress-fill" id="progressFill"></div>
+        <div class="flowchart">
+            <div class="step" data-step="plan">
+                <div class="step-icon">📋</div>
+                <div class="step-label">Plan</div>
+                <div class="step-agent">Oracle</div>
             </div>
-
-            <div class="flowchart">
-                <div class="step" data-step="assimilate">
-                    <div class="step-node">
-                        <div class="node-glow"></div>
-                        <div class="node-icon">🛸</div>
-                        <div class="node-label">ASSIMILATE</div>
-                    </div>
-                    <div class="step-agent">
-                        <span class="agent-name">Scanner</span>
-                        <span class="agent-task">Config</span>
-                    </div>
-                </div>
-
-                <div class="connector">
-                    <div class="connector-line"></div>
-                    <div class="connector-pulse"></div>
-                </div>
-
-                <div class="step" data-step="plan">
-                    <div class="step-node">
-                        <div class="node-glow"></div>
-                        <div class="node-icon">🔮</div>
-                        <div class="node-label">PLAN</div>
-                    </div>
-                    <div class="step-agent">
-                        <span class="agent-name">Oracle</span>
-                        <span class="agent-task">Stories</span>
-                    </div>
-                </div>
-
-                <div class="connector">
-                    <div class="connector-line"></div>
-                    <div class="connector-pulse"></div>
-                </div>
-
-                <div class="step" data-step="build">
-                    <div class="step-node">
-                        <div class="node-glow"></div>
-                        <div class="node-icon">⚡</div>
-                        <div class="node-label">BUILD</div>
-                    </div>
-                    <div class="step-agent">
-                        <span class="agent-name">Drone</span>
-                        <span class="agent-task">Code</span>
-                    </div>
-                </div>
-
-                <div class="connector">
-                    <div class="connector-line"></div>
-                    <div class="connector-pulse"></div>
-                </div>
-
-                <div class="step" data-step="test">
-                    <div class="step-node">
-                        <div class="node-glow"></div>
-                        <div class="node-icon">🔬</div>
-                        <div class="node-label">TEST</div>
-                    </div>
-                    <div class="step-agent">
-                        <span class="agent-name">Probe</span>
-                        <span class="agent-task">Tests</span>
-                    </div>
-                </div>
-
-                <div class="connector">
-                    <div class="connector-line"></div>
-                    <div class="connector-pulse"></div>
-                </div>
-
-                <div class="step" data-step="review">
-                    <div class="step-node">
-                        <div class="node-glow"></div>
-                        <div class="node-icon">👁️</div>
-                        <div class="node-label">REVIEW</div>
-                    </div>
-                    <div class="step-agent">
-                        <span class="agent-name">Overseer</span>
-                        <span class="agent-task">Approve</span>
-                    </div>
-                </div>
-
-                <div class="connector">
-                    <div class="connector-line"></div>
-                    <div class="connector-pulse"></div>
-                </div>
-
-                <div class="step" data-step="ship">
-                    <div class="step-node">
-                        <div class="node-glow"></div>
-                        <div class="node-icon">🚀</div>
-                        <div class="node-label">SHIP</div>
-                    </div>
-                    <div class="step-agent">
-                        <span class="agent-name">Beacon</span>
-                        <span class="agent-task">Deploy</span>
-                    </div>
-                </div>
+            <div class="connector"></div>
+            <div class="step" data-step="build">
+                <div class="step-icon">⚡</div>
+                <div class="step-label">Build</div>
+                <div class="step-agent">Drone</div>
+            </div>
+            <div class="connector"></div>
+            <div class="step" data-step="test">
+                <div class="step-icon">🧪</div>
+                <div class="step-label">Test</div>
+                <div class="step-agent">Probe</div>
+            </div>
+            <div class="connector"></div>
+            <div class="step" data-step="review">
+                <div class="step-icon">🔍</div>
+                <div class="step-label">Review</div>
+                <div class="step-agent">Overseer</div>
+            </div>
+            <div class="connector"></div>
+            <div class="step" data-step="ship">
+                <div class="step-icon">🚀</div>
+                <div class="step-label">Ship</div>
+                <div class="step-agent">Beacon</div>
             </div>
         </div>
 
         <div class="details-panel" id="detailsPanel">
             <div class="panel-header">
-                <span class="panel-icon" id="panelIcon">🛸</span>
-                <span class="panel-title" id="panelTitle">SELECT A PHASE</span>
+                <span class="panel-icon" id="panelIcon">📋</span>
+                <span class="panel-title" id="panelTitle">Select a Phase</span>
                 <button class="panel-close" id="panelClose">×</button>
             </div>
             <div class="panel-content">
                 <div class="detail-section">
-                    <h3>// AGENT FUNCTION</h3>
-                    <p id="agentFunction">Click on any phase node to view detailed intelligence.</p>
+                    <h3>What it does</h3>
+                    <p id="agentFunction">Click on any phase above to see detailed information about that agent.</p>
                 </div>
                 <div class="detail-section">
-                    <h3>// OUTPUT SIGNALS</h3>
-                    <div class="output-terminal" id="outputTerminal">
-                        <code>AWAITING SELECTION...</code>
+                    <h3>Output Signal</h3>
+                    <div class="terminal">
+                        <code id="outputTerminal">Waiting for selection...</code>
                     </div>
                 </div>
                 <div class="detail-section">
-                    <h3>// TIME ESTIMATE</h3>
+                    <h3>Typical Duration</h3>
                     <div class="time-display">
-                        <span class="time-value" id="timeValue">--:--</span>
-                        <span class="time-unit">CYCLES</span>
+                        <span class="time-value" id="timeValue">--</span>
+                        <span class="time-unit" id="timeUnit">minutes</span>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <footer class="footer">
-        <div class="footer-text">MOTHERSHIP COMMAND v2.0 // ALL SYSTEMS NOMINAL</div>
+    <footer>
+        <a href="https://github.com/chriscarterux/Mothership">← Back to GitHub</a>
     </footer>
 
-    <script src="script.js"></script>
+    <script>
+        const stepData = {
+            plan: {
+                icon: '📋',
+                title: 'Plan — Oracle',
+                function: 'Reads your documentation and creates structured stories. Each story has clear acceptance criteria and file hints. No manual PRD writing needed.',
+                signal: '<oracle>PLANNED:12</oracle>',
+                time: '2-5',
+                unit: 'minutes'
+            },
+            build: {
+                icon: '⚡',
+                title: 'Build — Drone',
+                function: 'Implements ONE story at a time. Follows existing patterns, runs type-check after each file, commits, and pushes. Loops until all stories complete.',
+                signal: '<drone>BUILT:STORY-123</drone>',
+                time: '5-15',
+                unit: 'min/story'
+            },
+            test: {
+                icon: '🧪',
+                title: 'Test — Probe',
+                function: 'Writes chaos tests for completed stories. Covers edge cases: null inputs, timeouts, auth bypasses, malformed data. Finds bugs you\'d never think of.',
+                signal: '<probe>TESTED:STORY-123</probe>',
+                time: '3-8',
+                unit: 'min/story'
+            },
+            review: {
+                icon: '🔍',
+                title: 'Review — Overseer',
+                function: 'Reviews all code before merge. Checks security, patterns, types, error handling. Creates fix tasks if issues found. Never writes code—only reviews.',
+                signal: '<overseer>APPROVED</overseer>',
+                time: '1-3',
+                unit: 'minutes'
+            },
+            ship: {
+                icon: '🚀',
+                title: 'Ship — Beacon',
+                function: 'Merges to main and deploys. Runs health checks. Auto-rollback if deployment fails. Updates issue status and cleans up branches.',
+                signal: '<beacon>DEPLOYED</beacon>',
+                time: '2-5',
+                unit: 'minutes'
+            }
+        };
+
+        document.querySelectorAll('.step').forEach(step => {
+            step.addEventListener('click', () => {
+                const key = step.dataset.step;
+                const data = stepData[key];
+                
+                document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+                step.classList.add('active');
+                
+                document.getElementById('detailsPanel').classList.add('active');
+                document.getElementById('panelIcon').textContent = data.icon;
+                document.getElementById('panelTitle').textContent = data.title;
+                document.getElementById('agentFunction').textContent = data.function;
+                document.getElementById('outputTerminal').textContent = data.signal;
+                document.getElementById('timeValue').textContent = data.time;
+                document.getElementById('timeUnit').textContent = data.unit;
+            });
+        });
+
+        document.getElementById('panelClose').addEventListener('click', () => {
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            document.getElementById('detailsPanel').classList.remove('active');
+        });
+
+        // Auto-select first step
+        document.querySelector('.step').click();
+    </script>
 </body>
 </html>

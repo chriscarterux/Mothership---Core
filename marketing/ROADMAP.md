@@ -21,7 +21,7 @@
 | Planning is manual | Oracle auto-creates stories from docs |
 | No dedicated testing | Probe writes chaos tests |
 | No code review | Overseer reviews before merge |
-| Amp-only | Works with any AI tool |
+| Single tool only | Works with any AI tool |
 | Linear/Jira not supported | 6 state backend adapters |
 | No smart onboarding | ASSIMILATE.md auto-configures |
 
@@ -31,58 +31,41 @@
 
 ### 🔴 P0: Must Have (Blocking Adoption)
 
-#### 1. Interactive Flowchart/Demo
-**Why:** Ralph's flowchart is a key differentiator. People understand visually.
+#### 1. Interactive Flowchart/Demo ✅ DONE
+- `docs/flowchart/` with interactive visualization
+- Landing page at `docs/index.html`
+- GitHub Pages workflow configured
 
-**Action:**
-- Create `flowchart/` with interactive visualization
-- Host at chriscarterux.github.io/Mothership
-- Show: ASSIMILATE → plan → build → test → review → ship
-
-#### 2. One-Command Install
-**Why:** Ralph has simple copy instructions. We have ASSIMILATE but it's complex.
-
-**Action:**
+#### 2. One-Command Install ✅ DONE
 ```bash
-npx create-mothership
-# or
-curl -fsSL https://mothership.dev/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/chriscarterux/Mothership/main/install.sh | bash
 ```
 
-#### 3. Video Demo
-**Why:** Ryan's Twitter thread drove massive adoption.
+#### 3. Video Demo 📋 SCRIPT READY
+- Video script in VIDEO_SCRIPT.md
+- Need to record 2-minute walkthrough
 
-**Action:**
-- 2-minute video: "Watch Mothership build a feature"
-- Show the alien theming, the signals, the loop
-- Post on Twitter/X, LinkedIn, Reddit
-
-#### 4. Skills for Easy PRD Creation
-**Why:** Ralph has skills/prd/ and skills/ralph/. We don't.
-
-**Action:**
-- Create `skills/plan/` - generates feature spec from description
-- Create `skills/stories/` - converts spec to stories
-- Works with Amp skills system (and generic for other tools)
+#### 4. Skills for Easy PRD Creation ✅ DONE
+- `skills/plan/` - generates feature spec from description
+- `skills/stories/` - converts spec to stories
+- Works with skills system (and generic for other tools)
 
 ---
 
 ### 🟡 P1: High Value (Competitive Edge)
 
-#### 5. Browser Verification Mode
-**Why:** Ralph uses dev-browser skill. We should too.
+#### 5. Browser Verification Mode ✅ DONE
+- Added browser verification step to Drone (step 6b in full/agents/drone.md)
+- For UI stories: navigate, verify elements, run Playwright tests
+- Notes verification in commit message
 
-**Action:**
-- Add browser verification step to Drone
-- For UI stories: navigate, screenshot, confirm
-- Integrate with Playwright or similar
+#### 6. GitHub Actions Integration ✅ DONE
+- `action.yml` composite action
+- `docs/github-actions.md` documentation
+- Supports all modes: plan, build, test, review
 
-#### 6. GitHub Actions Integration
-**Why:** Run Mothership in CI/CD.
-
-**Action:**
 ```yaml
-- uses: chriscarterux/mothership-action@v1
+- uses: chriscarterux/Mothership@main
   with:
     mode: build
     max-iterations: 20
@@ -124,42 +107,45 @@ curl -fsSL https://mothership.dev/install.sh | bash
 |---------|-------|------------|-----|
 | Core files | 3 | 5 (lite) / 10 (full) | ✅ Comparable |
 | Line count | ~200 | ~200 (lite) / ~600 (full) | ✅ Comparable |
-| Interactive demo | ✅ Yes | ❌ No | 🔴 **Critical** |
-| Video demo | ✅ Yes | ❌ No | 🔴 **Critical** |
-| One-command install | ⚠️ Copy | ❌ ASSIMILATE | 🟡 Improve |
-| Skills/templates | ✅ 2 skills | ❌ No | 🔴 **Add** |
+| Interactive demo | ✅ Yes | ✅ Yes | ✅ **Matched** |
+| Video demo | ✅ Yes | ⚠️ Script ready | 🟡 Record |
+| One-command install | ⚠️ Copy | ✅ `curl \| bash` | ✅ **Advantage** |
+| Skills/templates | ✅ 2 skills | ✅ 2 skills | ✅ **Matched** |
 | Planning | ❌ Manual | ✅ Oracle | ✅ **Advantage** |
 | Testing | ⚠️ Afterthought | ✅ Probe | ✅ **Advantage** |
 | Review | ❌ None | ✅ Overseer | ✅ **Advantage** |
 | State backends | 1 (JSON) | 6 | ✅ **Advantage** |
-| AI tools | 1 (Amp) | 5+ | ✅ **Advantage** |
-| Browser testing | ✅ dev-browser | ❌ No | 🟡 Add |
+| AI tools | 1 | 5+ | ✅ **Advantage** |
+| Browser testing | ✅ dev-browser | ✅ Drone step | ✅ **Matched** |
+| GitHub Action | ❌ No | ✅ Yes | ✅ **Advantage** |
+| Archiving | ✅ Yes | ✅ Yes | ✅ **Matched** |
 
 ---
 
 ## 30-Day Sprint Plan
 
 ### Week 1: Visual & Discoverability
-- [ ] Create interactive flowchart (like Ralph's)
-- [ ] Record 2-min demo video
-- [ ] Write Twitter/X launch thread
+- [x] Create interactive flowchart (like Ralph's)
+- [ ] Record 2-min demo video (script ready in VIDEO_SCRIPT.md)
+- [ ] Write Twitter/X launch thread (draft in LAUNCH.md)
 - [ ] Add GitHub topics and social preview
 
 ### Week 2: Onboarding & Skills
-- [ ] Create `npx create-mothership` or install script
-- [ ] Build skills/plan/ for PRD generation
-- [ ] Simplify ASSIMILATE.md flow
-- [ ] Add prd.json.example like Ralph
+- [x] Create `curl | bash` install script
+- [x] Build skills/plan/ for PRD generation
+- [x] Build skills/stories/ for story breakdown
+- [x] Simplify ASSIMILATE.md flow
+- [x] Add example stories.json
 
 ### Week 3: Features & Polish
-- [ ] Add browser verification to Drone
-- [ ] Create GitHub Action
-- [ ] Add archiving (like Ralph)
-- [ ] Improve error messages
+- [x] Add browser verification to Drone
+- [x] Create GitHub Action
+- [x] Add archiving (like Ralph)
+- [x] Improve error messages
 
 ### Week 4: Launch & Community
-- [ ] Post to Hacker News
-- [ ] Post to Reddit (r/programming, r/artificial)
+- [ ] Post to Hacker News (draft in LAUNCH.md)
+- [ ] Post to Reddit (draft in LAUNCH.md)
 - [ ] Engage with Ralph/Geoffrey community
 - [ ] Collect feedback, iterate
 
@@ -183,6 +169,6 @@ curl -fsSL https://mothership.dev/install.sh | bash
 
 Ralph requires you to write a PRD. Mothership reads your docs and creates one.
 Ralph implements. Mothership implements, tests, AND reviews.
-Ralph works with Amp. Mothership works with everything.
+Ralph works with one tool. Mothership works with everything.
 
 *"Ralph is a loop. Mothership is a fleet."* 🛸

@@ -10,10 +10,10 @@ If asked to code directly, load the appropriate agent instead.
 | Command | Action |
 |---------|--------|
 | `status` | Show checkpoint + what's next |
-| `plan` | Load → `agents/planner.md` |
-| `build` | Load → `agents/builder.md` |
-| `test` | Load → `agents/tester.md` |
-| `review` | Load → `agents/reviewer.md` |
+| `plan` | Load → `agents/oracle.md` |
+| `build` | Load → `agents/drone.md` |
+| `test` | Load → `agents/probe.md` |
+| `review` | Load → `agents/overseer.md` |
 | `reset` | Clear checkpoint, fresh start |
 
 Ambiguous input? Ask: "Did you mean `plan`, `build`, `test`, or `review`?"
@@ -38,30 +38,9 @@ On every activation:
 
 ---
 
-## State Backend
+## State
 
-Read `config.json` to determine backend:
-- `"state": "linear"` → Stories in Linear, use Linear API
-- `"state": "local"` → Stories in `stories.json`, update file directly
-
-For local mode:
-- `stories.json` has: `project`, `branch`, `stories[]`
-- Each story: `{id, title, status, priority, ac[], files[]}`
-- Status: `ready`, `in_progress`, `done`, `blocked`
-- Update status by editing the JSON file
-
----
-
-## Checkpoint Format
-
-```markdown
-phase: [plan|build|test|review|done]
-project: <project-name>
-branch: <current-branch>
-story: <one-line summary>
-```
-
-Update after each phase transition. Agents write their own artifacts.
+See `STATE.md` for backend config and formats.
 
 ---
 

@@ -41,11 +41,12 @@ cp -r full/* test-project/.mothership/
 
 ## Areas Needing Help
 
-- [ ] More state backend adapters (Asana, Monday, etc.)
-- [ ] Language-specific optimizations
-- [ ] Interactive flowchart improvements
+- [ ] More state backend adapters (Asana, Monday, markdown files)
+- [ ] Language-specific optimizations (Rust, Go, Python patterns)
+- [ ] Web Dashboard (future SaaS feature)
+- [ ] Team features (multi-dev, conflict resolution)
 - [ ] Documentation translations
-- [ ] Video tutorials
+- [ ] Record the 2-min demo video (script ready)
 
 ## Questions?
 

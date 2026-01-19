@@ -21,35 +21,15 @@ If you're creating files with "agent", "orchestrator", "mothership" in the name 
 
 ## STATE
 
-```bash
-# Always read first
-cat .mothership/checkpoint.md 2>/dev/null || echo "phase: ready"
-cat .mothership/codebase.md 2>/dev/null || echo "Run: mothership onboard"
-```
+Read first: `.mothership/checkpoint.md`, `.mothership/codebase.md`
 
-**Checkpoint format** (keep it simple):
-```
-phase: [plan|build|test|review|done]
-project: [Linear project name]
-branch: [git branch]
-story: [current story ID or null]
-```
+**Checkpoint:** `phase | project | branch | story`
 
----
+**Backend** (`.mothership/config.json`): `"state": "linear"` or `"state": "local"`
 
-## STATE BACKEND
+Local uses `.mothership/stories.json`: `{project, branch, stories: [{id, title, status, ac[], files[]}]}`
 
-Check `.mothership/config.json`:
-- `"state": "linear"` → use Linear API for stories
-- `"state": "local"` → use `.mothership/stories.json`
-
-**Local stories.json format:**
-```json
-{"project": "Feature", "branch": "feat/name", "stories": [
-  {"id": "1", "title": "User can X", "status": "ready", "ac": ["criterion"], "files": ["path"]}
-]}
-```
-Status: `ready` | `in_progress` | `done` | `blocked`. Update by editing JSON directly.
+Status: `ready` → `in_progress` → `done` | `blocked`
 
 ---
 
@@ -148,17 +128,11 @@ Output summary and next action.
 
 ## MODE: onboard
 
-```bash
-tree -L 2 -I 'node_modules|.git|dist' 2>/dev/null | head -40
-cat package.json | head -30
-cat README.md 2>/dev/null | head -20
-```
-
-Create `.mothership/codebase.md`:
+Scan project structure, package.json, README. Create `.mothership/codebase.md`:
 ```
 Stack: [framework, language, styling]
-Structure: [where pages, components, api live]
-Patterns: [reference 1-2 good examples]
+Structure: [pages, components, api locations]
+Patterns: [1-2 example files]
 Commands: [typecheck, lint, test, build]
 ```
 

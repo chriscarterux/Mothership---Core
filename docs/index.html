@@ -4,285 +4,613 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mothership - AI Agents That Build Your Features</title>
-    <meta name="description" content="Tell Mothership what to build. It plans, implements, tests, and reviews. Like having a dev team that never sleeps.">
+    <meta name="description" content="Tell Mothership what to build. It plans, implements, tests, and reviews. Ship features 10x faster.">
+    <meta property="og:title" content="Mothership - AI Agents That Build Your Features">
+    <meta property="og:description" content="Plan → Build → Test → Review → Ship. Automated.">
+    <meta property="og:type" content="website">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
+        :root {
+            --bg: #09090b;
+            --bg-subtle: #18181b;
+            --bg-muted: #27272a;
+            --border: #3f3f46;
+            --text: #fafafa;
+            --text-muted: #a1a1aa;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --success: #22c55e;
+            --gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0a0a1a;
-            color: #e0e0e0;
-            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
         }
 
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(9, 9, 11, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 64px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.25rem;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .logo-icon {
+            font-size: 1.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text);
+        }
+
+        .nav-cta {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--bg-subtle);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-muted);
+            border-color: var(--text-muted);
+        }
+
+        /* Hero */
         .hero {
+            padding: 160px 0 100px;
             text-align: center;
-            padding: 80px 20px;
-            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 100%);
         }
 
-        .ufo {
-            font-size: 80px;
-            animation: float 3s ease-in-out infinite;
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: var(--bg-subtle);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
         }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
+        .hero-badge-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
         }
 
-        h1 {
-            font-size: 3rem;
-            margin: 20px 0;
-            background: linear-gradient(90deg, #00d4ff, #7b2fff);
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            background: linear-gradient(180deg, #fff 0%, #a1a1aa 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
 
-        .tagline {
-            font-size: 1.5rem;
-            color: #888;
-            margin-bottom: 40px;
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 40px;
         }
 
-        .cta-buttons {
+        .hero-cta {
             display: flex;
-            gap: 20px;
+            gap: 16px;
             justify-content: center;
             flex-wrap: wrap;
+            margin-bottom: 60px;
         }
 
-        .btn {
-            padding: 15px 30px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1.1rem;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .btn-primary {
-            background: linear-gradient(90deg, #00d4ff, #7b2fff);
-            color: white;
-        }
-
-        .btn-secondary {
-            background: transparent;
-            border: 2px solid #00d4ff;
-            color: #00d4ff;
-        }
-
-        .install-section {
-            background: #111;
-            padding: 60px 20px;
-            text-align: center;
-        }
-
-        .install-code {
-            background: #1a1a2e;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 20px 40px;
+        .hero-code {
+            background: var(--bg-subtle);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px 32px;
             display: inline-block;
-            margin: 20px 0;
-            font-family: 'Monaco', 'Menlo', monospace;
-            font-size: 1.1rem;
-            color: #00d4ff;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--success);
         }
 
-        .features {
-            padding: 80px 20px;
-            max-width: 1200px;
+        /* Flow Section */
+        .flow-section {
+            padding: 100px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .section-desc {
+            color: var(--text-muted);
+            max-width: 500px;
             margin: 0 auto;
         }
 
-        .features h2 {
-            text-align: center;
-            font-size: 2rem;
-            margin-bottom: 50px;
+        .flow-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            position: relative;
         }
 
-        .feature-grid {
+        .flow-connector {
+            position: absolute;
+            top: 50px;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background: var(--border);
+            z-index: 0;
+        }
+
+        .flow-step {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .flow-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 16px;
+            background: var(--bg-subtle);
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            transition: all 0.3s;
+        }
+
+        .flow-step:hover .flow-icon {
+            border-color: var(--accent);
+            box-shadow: 0 0 24px rgba(59, 130, 246, 0.3);
+            transform: translateY(-4px);
+        }
+
+        .flow-label {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .flow-agent {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Features */
+        .features-section {
+            padding: 100px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
         }
 
         .feature-card {
-            background: #1a1a2e;
-            border: 1px solid #333;
-            border-radius: 12px;
-            padding: 30px;
-            transition: transform 0.2s, border-color 0.2s;
+            background: var(--bg-subtle);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            transition: all 0.3s;
         }
 
         .feature-card:hover {
-            transform: translateY(-5px);
-            border-color: #00d4ff;
+            border-color: var(--accent);
+            transform: translateY(-2px);
         }
 
         .feature-icon {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
+            width: 48px;
+            height: 48px;
+            background: var(--bg-muted);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
         }
 
         .feature-card h3 {
-            color: #00d4ff;
-            margin-bottom: 10px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 8px;
         }
 
-        .comparison {
-            padding: 80px 20px;
-            background: #111;
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
         }
 
-        .comparison h2 {
+        /* Stats */
+        .stats-section {
+            padding: 80px 0;
+            border-top: 1px solid var(--border);
+            background: var(--bg-subtle);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 32px;
             text-align: center;
-            font-size: 2rem;
-            margin-bottom: 40px;
         }
 
-        .comparison-table {
-            max-width: 800px;
-            margin: 0 auto;
-            border-collapse: collapse;
-            width: 100%;
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .comparison-table th,
-        .comparison-table td {
-            padding: 15px 20px;
-            text-align: left;
-            border-bottom: 1px solid #333;
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-top: 4px;
         }
 
-        .comparison-table th {
-            color: #00d4ff;
+        /* CTA Section */
+        .cta-section {
+            padding: 100px 0;
+            text-align: center;
         }
 
-        .check { color: #00ff88; }
-        .x { color: #ff4444; }
+        .cta-section h2 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
 
+        .cta-section p {
+            color: var(--text-muted);
+            margin-bottom: 32px;
+        }
+
+        /* Footer */
         footer {
+            padding: 40px 0;
+            border-top: 1px solid var(--border);
             text-align: center;
-            padding: 40px 20px;
-            color: #666;
+            color: var(--text-muted);
+            font-size: 0.875rem;
         }
 
         footer a {
-            color: #00d4ff;
+            color: var(--text-muted);
             text-decoration: none;
+            transition: color 0.2s;
         }
 
-        @media (max-width: 600px) {
-            h1 { font-size: 2rem; }
-            .tagline { font-size: 1.2rem; }
+        footer a:hover {
+            color: var(--text);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-bottom: 16px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .flow-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .flow-connector { display: none; }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .flow-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .hero h1 { font-size: 2rem; }
+            .hero-code {
+                font-size: 0.75rem;
+                padding: 16px 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .flow-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .nav-cta .btn-secondary { display: none; }
         }
     </style>
 </head>
 <body>
+    <nav>
+        <div class="container nav-content">
+            <a href="#" class="logo">
+                <span class="logo-icon">🛸</span>
+                <span>Mothership</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#flow">How It Works</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="./flowchart/">Demo</a></li>
+                <li><a href="https://github.com/chriscarterux/Mothership/blob/main/docs/github-actions.md">Docs</a></li>
+            </ul>
+            <div class="nav-cta">
+                <a href="./flowchart/" class="btn btn-secondary">Live Demo</a>
+                <a href="https://github.com/chriscarterux/Mothership" class="btn btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.605-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12"/></svg>
+                    GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
     <section class="hero">
-        <div class="ufo">🛸</div>
-        <h1>Mothership</h1>
-        <p class="tagline">AI agents that build your features</p>
-        <div class="cta-buttons">
-            <a href="https://github.com/chriscarterux/Mothership" class="btn btn-primary">⭐ Star on GitHub</a>
-            <a href="./flowchart/" class="btn btn-secondary">View Demo →</a>
-        </div>
-    </section>
-
-    <section class="install-section">
-        <h2>One-Line Install</h2>
-        <div class="install-code">
-            curl -fsSL https://mothership.dev/install.sh | bash
-        </div>
-        <p style="color: #666; margin-top: 20px;">Works with any AI tool: Claude, Cursor, GPT-4, and more</p>
-    </section>
-
-    <section class="features">
-        <h2>The Fleet</h2>
-        <div class="feature-grid">
-            <div class="feature-card">
-                <div class="feature-icon">🔮</div>
-                <h3>Oracle</h3>
-                <p>Reads your docs and creates stories. No manual PRD writing needed.</p>
+        <div class="container">
+            <div class="hero-badge">
+                <span class="hero-badge-dot"></span>
+                Open Source
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">🛠️</div>
-                <h3>Drone</h3>
-                <p>Implements one story at a time. Commits, pushes, updates status.</p>
+            <h1>AI agents that build<br>your features</h1>
+            <p class="hero-subtitle">
+                Tell Mothership what to build. It plans, implements, tests, and reviews. 
+                Ship production-ready code 10x faster.
+            </p>
+            <div class="hero-cta">
+                <a href="https://github.com/chriscarterux/Mothership" class="btn btn-primary">
+                    Get Started
+                </a>
+                <a href="./flowchart/" class="btn btn-secondary">
+                    Watch Demo →
+                </a>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">🔬</div>
-                <h3>Probe</h3>
-                <p>Writes chaos tests. Finds edge cases. Exposes vulnerabilities.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">👁️</div>
-                <h3>Overseer</h3>
-                <p>Reviews code before merge. Checks security, performance, patterns.</p>
+            <div class="hero-code">
+                curl -fsSL https://raw.githubusercontent.com/chriscarterux/Mothership/main/install.sh | bash
             </div>
         </div>
     </section>
 
-    <section class="comparison">
-        <h2>Why Mothership?</h2>
-        <table class="comparison-table">
-            <thead>
-                <tr>
-                    <th>Feature</th>
-                    <th>Manual Dev</th>
-                    <th>Basic AI</th>
-                    <th>Mothership</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Auto-plans from docs</td>
-                    <td class="x">✗</td>
-                    <td class="x">✗</td>
-                    <td class="check">✓</td>
-                </tr>
-                <tr>
-                    <td>Writes chaos tests</td>
-                    <td class="x">✗</td>
-                    <td class="x">✗</td>
-                    <td class="check">✓</td>
-                </tr>
-                <tr>
-                    <td>Reviews before merge</td>
-                    <td class="check">✓</td>
-                    <td class="x">✗</td>
-                    <td class="check">✓</td>
-                </tr>
-                <tr>
-                    <td>Works with any AI tool</td>
-                    <td>N/A</td>
-                    <td class="x">✗</td>
-                    <td class="check">✓</td>
-                </tr>
-                <tr>
-                    <td>Loops until complete</td>
-                    <td class="x">✗</td>
-                    <td class="x">✗</td>
-                    <td class="check">✓</td>
-                </tr>
-            </tbody>
-        </table>
+    <section class="flow-section" id="flow">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-label">Workflow</div>
+                <h2 class="section-title">From idea to production</h2>
+                <p class="section-desc">Five specialized agents work in sequence to ship complete features.</p>
+            </div>
+            <div class="flow-grid">
+                <div class="flow-connector"></div>
+                <div class="flow-step">
+                    <div class="flow-icon">📋</div>
+                    <div class="flow-label">Plan</div>
+                    <div class="flow-agent">Oracle</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-icon">⚡</div>
+                    <div class="flow-label">Build</div>
+                    <div class="flow-agent">Drone</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-icon">🧪</div>
+                    <div class="flow-label">Test</div>
+                    <div class="flow-agent">Probe</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-icon">🔍</div>
+                    <div class="flow-label">Review</div>
+                    <div class="flow-agent">Overseer</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-icon">🚀</div>
+                    <div class="flow-label">Ship</div>
+                    <div class="flow-agent">Beacon</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features-section" id="features">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-label">Features</div>
+                <h2 class="section-title">Everything you need</h2>
+                <p class="section-desc">Built for developers who want to ship faster without sacrificing quality.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔮</div>
+                    <h3>Auto-Planning</h3>
+                    <p>Oracle reads your docs and creates structured stories. No manual PRD writing needed.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔁</div>
+                    <h3>Loop Until Done</h3>
+                    <p>Fresh context each iteration. Never loses track. Runs until the feature ships.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🧪</div>
+                    <h3>Chaos Testing</h3>
+                    <p>Probe finds edge cases you'd never think of. Null inputs, timeouts, auth bypasses.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👁️</div>
+                    <h3>Code Review</h3>
+                    <p>Overseer checks security, patterns, and quality before any merge.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔌</div>
+                    <h3>Any AI Tool</h3>
+                    <p>Works with Claude, Cursor, Aider, and more. Not locked to one provider.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Any Tracker</h3>
+                    <p>Linear, Jira, GitHub Issues, Notion, Trello, or simple local JSON.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat">
+                    <div class="stat-value">~1,000</div>
+                    <div class="stat-label">Tokens per run</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">$0.003</div>
+                    <div class="stat-label">Cost per iteration</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">4x</div>
+                    <div class="stat-label">More efficient than verbose prompts</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">6</div>
+                    <div class="stat-label">State backend adapters</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <div class="container">
+            <h2>Ready to ship faster?</h2>
+            <p>Get started in under a minute. Works with any codebase.</p>
+            <a href="https://github.com/chriscarterux/Mothership" class="btn btn-primary">
+                View on GitHub
+            </a>
+        </div>
     </section>
 
     <footer>
-        <p>
-            <a href="https://github.com/chriscarterux/Mothership">GitHub</a> · 
-            <a href="./flowchart/">Interactive Demo</a> · 
-            <a href="https://github.com/chriscarterux/Mothership/blob/main/CREDITS.md">Credits</a>
-        </p>
-        <p style="margin-top: 20px;">"I come in peace. I leave with features." 🛸</p>
+        <div class="container">
+            <div class="footer-links">
+                <a href="https://github.com/chriscarterux/Mothership">GitHub</a>
+                <a href="./flowchart/">Demo</a>
+                <a href="https://github.com/chriscarterux/Mothership/blob/main/CREDITS.md">Credits</a>
+                <a href="https://github.com/chriscarterux/Mothership/blob/main/LICENSE">MIT License</a>
+            </div>
+            <p>"I come in peace. I leave with features." 🛸</p>
+        </div>
     </footer>
 </body>
 </html>

@@ -16,7 +16,7 @@ Use Mothership's AI agents directly in your GitHub workflows.
 |-------|-------------|----------|---------|
 | `mode` | Mode to run: `plan`, `build`, `test`, `review` | Yes | `build` |
 | `max-iterations` | Maximum iterations for loop modes | No | `10` |
-| `ai-tool` | AI CLI tool to use (`amp`, `claude`, `aider`, `auto`) | No | `auto` |
+| `ai-tool` | AI CLI tool to use (`claude`, `cursor`, `aider`, `auto`) | No | `auto` |
 
 ## Modes
 
