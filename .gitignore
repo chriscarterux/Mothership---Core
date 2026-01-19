@@ -1,0 +1,17 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+.idea/
+.vscode/
+*.sublime-*
+
+# Note: When installed in a user's project, these files ARE generated:
+# - checkpoint.md (runtime state)
+# - codebase.md (project analysis)
+# - history/ (logs)
+# - .intro_shown (flag)
+# But in THIS repo, we don't have those files

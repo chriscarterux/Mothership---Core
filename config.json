@@ -1,0 +1,68 @@
+{
+  // Linear Integration
+  "linear_team": "YOUR_TEAM_NAME",
+  "linear_project": null,
+  "docs_path": "./docs",
+  "branch_prefix": "drone",
+
+  // Linear State Mapping (customize to match your workflow)
+  "linear_states": {
+    "ready": "Ready",
+    "in_progress": "In Progress",
+    "done": "Done",
+    "blocked": "Blocked",
+    "in_review": "In Review"
+  },
+
+  // Quality Commands
+  "quality_commands": {
+    "typecheck": "npm run type-check",
+    "lint": "npm run lint",
+    "test": "npm run test",
+    "build": "npm run build"
+  },
+
+  // Agent Configuration
+  "agents": {
+    "hivemind": false,   // Prioritizer - optional, for automated backlog prioritization
+    "oracle": true,      // Planner - breaks down issues into implementation plans
+    "drone": true,       // Implementer - writes the actual code
+    "probe": true,       // Tester - generates and runs tests
+    "overseer": true,    // Reviewer - reviews code changes
+    "beacon": false,     // Deployer - often manual, handles deployments
+    "watcher": false,    // Monitor - optional, watches production health
+    "scribe": true,      // Documentarian - maintains documentation
+    "recycler": false    // Cleanup - optional, manages tech debt
+  },
+
+  // Workflow Settings
+  "settings": {
+    "auto_merge": false,
+    "require_tests": true,
+    "require_review": true,
+    "use_prs": false,
+    "staged_rollout": false,
+    "rollout_percentages": [1, 10, 50, 100]
+  },
+
+  // Notifications (Beacon)
+  "notifications": {
+    "slack_webhook": null,
+    "discord_webhook": null
+  },
+
+  // Monitoring (Watcher)
+  "monitoring": {
+    "health_endpoint": "/api/health",
+    "error_threshold": 2.0,
+    "latency_threshold": 2.0
+  },
+
+  // Tech Debt Management (Recycler)
+  "tech_debt": {
+    "max_any_types": 50,
+    "max_todos": 100,
+    "auto_update_patch": true,
+    "auto_update_minor": false
+  }
+}
