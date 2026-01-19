@@ -38,23 +38,24 @@ The Mothership will scan your environment and configure itself.
 
 Supports:
 - **State:** Linear, Jira, GitHub Issues, Notion, Trello, local JSON
-- **AI tools:** Any CLI (auto-detects claude, cursor, aider)
+- **AI tools:** Any CLI (auto-detects amp, claude, cursor, aider)
 - **Projects:** New or existing codebases
 
 ---
 
 ## ✨ Features
 
-- **🔮 Auto-Planning** - Oracle reads your docs, creates stories automatically
+- **🔮 Auto-Planning** - Cipher reads your docs, creates stories automatically
 - **🔁 Loop Until Done** - Fresh context each iteration, never loses track
-- **🔬 Chaos Testing** - Probe finds edge cases you'd never think of
-- **👁️ Code Review** - Overseer checks before merge
-- **🌐 Browser Verification** - Drone validates UI with Playwright
-- **🔌 Any AI Tool** - Works with Claude, Cursor, Aider, and more
+- **🔬 Chaos Testing** - Cortex finds edge cases you'd never think of
+- **👁️ Code Review** - Sentinel checks before merge
+- **🌐 Browser Verification** - Vector validates UI with Playwright
+- **🔌 Any AI Tool** - Works with AMP, Claude, Cursor, Aider, and more
 - **📊 Any Tracker** - Linear, Jira, GitHub Issues, Notion, Trello, or JSON
 - **⚡ One-Line Install** - `curl | bash` and you're ready
 - **🤖 GitHub Action** - Run in CI/CD pipelines
 - **📋 Skills** - plan/ and stories/ skills for easy onboarding
+- **🏢 Enterprise Ready** - Matrix tier for complex deployments
 
 ---
 
@@ -62,12 +63,12 @@ Supports:
 
 Mothership prompts are **obsessively optimized**. Every line earns its place.
 
-| Metric | Lite | Full | Verbose Alternative |
-|--------|------|------|---------------------|
-| **Tokens/run** | ~1,100 | ~1,000 | ~4,000+ |
-| **Cost/run*** | $0.003 | $0.003 | $0.012+ |
-| **20 iterations** | $0.06 | $0.06 | $0.24+ |
-| **100 iterations** | $0.30 | $0.30 | $1.20+ |
+| Metric | Shard | Array | Matrix | Verbose Alternative |
+|--------|-------|-------|--------|---------------------|
+| **Tokens/run** | ~1,100 | ~1,000 | ~2,000 | ~4,000+ |
+| **Cost/run*** | $0.003 | $0.003 | $0.006 | $0.012+ |
+| **20 iterations** | $0.06 | $0.06 | $0.12 | $0.24+ |
+| **100 iterations** | $0.30 | $0.30 | $0.60 | $1.20+ |
 
 <sub>*Based on Claude Sonnet input pricing ($3/1M tokens). Output costs additional.</sub>
 
@@ -77,27 +78,29 @@ Mothership prompts are **obsessively optimized**. Every line earns its place.
 - Dynamic loading (only the agent you need)
 - Shared state reference (one `STATE.md`, not duplicated everywhere)
 
-**Your savings over 1,000 builds: ~$9** (or mass with GPT-4/Claude Opus)
+**Your savings over 1,000 builds: ~$9** (or more with GPT-4/Claude Opus)
 
 ---
 
-## Choose Your Version
+## Choose Your Tier
 
-| | [Lite](./lite/) | [Full](./full/) |
-|---|-----------------|-----------------|
-| **Files** | 1 | 6 + agents/ |
-| **Lines** | ~180 | ~260 |
-| **Tokens/run** | ~1,100 | ~1,000 |
-| **Agents** | 1 (modes) | 4 (specialized) |
-| **Complexity** | Minimal | Moderate |
-| **Best for** | Solo devs, small projects | Teams, complex projects |
+| | [Shard](./shard/) | [Array](./array/) | [Matrix](./matrix/) |
+|---|-----------------|-----------------|-------------------|
+| **Files** | 1 | 6 + agents/ | 6 + agents/ + enterprise/ |
+| **Lines** | ~180 | ~260 | ~600 |
+| **Tokens/run** | ~1,100 | ~1,000 | ~2,000 |
+| **Agents** | 1 (modes) | 4 (specialized) | 9+ (coordinated) |
+| **Complexity** | Minimal | Moderate | Enterprise |
+| **Best for** | Solo devs | Teams | Enterprise |
 
 ---
 
-## Lite (One File)
+## Shard (One File)
+
+> *A single fragment. All you need to get started.*
 
 ```bash
-cp lite/mothership.md .mothership/
+cp shard/mothership.md .mothership/
 ```
 
 ```
@@ -107,26 +110,84 @@ cp lite/mothership.md .mothership/
 
 ~180 lines, ~1,100 tokens. Modes: plan, build, test, review.
 
-**[→ Lite Docs](./lite/README.md)**
+**[→ Shard Docs](./shard/README.md)**
 
 ---
 
-## Full (Specialized Agents)
+## Array (Specialized Agents)
+
+> *An organized collection. Teams working together.*
 
 ```bash
-cp -r full/ .mothership/
+cp -r array/ .mothership/
 ```
 
 ```
-"Read .mothership/mothership.md and run: plan user auth"   # Oracle
-"Read .mothership/mothership.md and run: build"            # Drone
-"Read .mothership/mothership.md and run: test"             # Probe
-"Read .mothership/mothership.md and run: review"           # Overseer
+"Read .mothership/mothership.md and run: plan user auth"   # Cipher
+"Read .mothership/mothership.md and run: build"            # Vector
+"Read .mothership/mothership.md and run: test"             # Cortex
+"Read .mothership/mothership.md and run: review"           # Sentinel
 ```
 
 4 specialized agents, ~30 lines each. ~1,000 tokens per run.
 
-**[→ Full Docs](./full/README.md)**
+**[→ Array Docs](./array/README.md)**
+
+---
+
+## Matrix (Enterprise)
+
+> *The interconnected grid. Enterprise-grade orchestration.*
+
+```bash
+cp -r matrix/ .mothership/
+```
+
+**Core Agents:** Cipher, Vector, Cortex, Sentinel
+
+**Enterprise Agents:**
+- **Arbiter** - Conflict resolution
+- **Conductor** - Multi-service deployment
+- **Coalition** - Multi-team coordination
+- **Vault** - Secrets management
+- **Telemetry** - Analytics & compliance
+
+Features: governance, approvals, multi-service deployments, secret scanning, DORA metrics.
+
+**[→ Matrix Docs](./matrix/README.md)**
+
+---
+
+## Agent Reference
+
+### Core Agents
+
+| Agent | Role | Signal |
+|-------|------|--------|
+| **Cipher** | Planning - decodes requirements into stories | `<cipher>PLANNED:N</cipher>` |
+| **Vector** | Building - constructs code from stories | `<vector>BUILT:ID</vector>` |
+| **Cortex** | Testing - analyzes with chaos tests | `<cortex>TESTED:ID</cortex>` |
+| **Sentinel** | Review - guards code quality | `<sentinel>APPROVED</sentinel>` |
+
+### Optional Agents
+
+| Agent | Role | Signal |
+|-------|------|--------|
+| **Pulse** | Deployment | `<pulse>DEPLOYED</pulse>` |
+| **Nexus** | Prioritization | `<nexus>PRIORITIZED:N</nexus>` |
+| **Vigil** | Monitoring | `<vigil>HEALTHY</vigil>` |
+| **Archive** | Documentation | `<archive>DOCUMENTED:files</archive>` |
+| **Purge** | Tech debt cleanup | `<purge>CLEANED:summary</purge>` |
+
+### Enterprise Agents (Matrix only)
+
+| Agent | Role | Signal |
+|-------|------|--------|
+| **Arbiter** | Conflict resolution | `<arbiter>RESOLVED:IDs</arbiter>` |
+| **Conductor** | Deployment orchestration | `<conductor>DEPLOYED:services</conductor>` |
+| **Coalition** | Multi-team coordination | `<coalition>COORDINATED:teams</coalition>` |
+| **Vault** | Secrets management | `<vault>SECURED:count</vault>` |
+| **Telemetry** | Analytics & metrics | `<telemetry>REPORT:summary</telemetry>` |
 
 ---
 
@@ -138,13 +199,14 @@ Mothership keeps that simplicity and adds:
 
 | Ralph Lacks | Mothership Has |
 |-------------|----------------|
-| Planning | `plan` mode/Oracle creates stories |
-| Testing | `test` mode/Probe writes chaos tests |
-| Review | `review` mode/Overseer checks quality |
+| Planning | `plan` mode/Cipher creates stories |
+| Testing | `test` mode/Cortex writes chaos tests |
+| Review | `review` mode/Sentinel checks quality |
 | Recovery | Checkpoint for context loss |
 | Patterns | codebase.md persists learnings |
 | GitHub Action | CI/CD integration out of the box |
 | Multi-backend | 6 state adapters (not just JSON) |
+| Enterprise | Matrix tier with governance & multi-service |
 
 ---
 

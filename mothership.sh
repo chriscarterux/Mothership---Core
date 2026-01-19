@@ -97,6 +97,8 @@ Either:
   2. Set AI_TOOL to a valid CLI tool
   3. Add $AI_CMD to your PATH"
     fi
+elif command -v amp &> /dev/null; then
+    AI_CMD="amp"
 elif command -v claude &> /dev/null; then
     AI_CMD="claude"
 elif command -v cursor &> /dev/null; then
@@ -105,6 +107,7 @@ else
     error "No AI CLI tool found
 
 Install one of:
+  • amp     - https://ampcode.com (recommended)
   • claude  - https://claude.ai/code
   • cursor  - https://cursor.sh
   • aider   - https://aider.chat
@@ -113,11 +116,13 @@ Or set AI_TOOL environment variable:
   AI_TOOL=my-ai-cli ./mothership.sh build"
 fi
 
-# Detect version
-if [[ -d ".mothership/agents" ]]; then
-    VERSION="full"
+# Detect version (shard → array → matrix)
+if [[ -d ".mothership/agents/enterprise" ]]; then
+    VERSION="matrix"
+elif [[ -d ".mothership/agents" ]]; then
+    VERSION="array"
 else
-    VERSION="lite"
+    VERSION="shard"
 fi
 
 # Archive previous run if exists
@@ -138,12 +143,12 @@ if [ -f ".mothership/checkpoint.md" ]; then
     fi
 fi
 
-# Set completion signals based on mode
+# Set completion signals based on mode (supports both verbose and compressed)
 case "$MODE" in
-    build)  SIGNALS="BUILD-COMPLETE|COMPLETE" ;;
-    test)   SIGNALS="TEST-COMPLETE|COMPLETE" ;;
-    plan)   SIGNALS="PLANNED"; MAX_ITERATIONS=1 ;;
-    review) SIGNALS="APPROVED|NEEDS-WORK"; MAX_ITERATIONS=1 ;;
+    build)  SIGNALS="BUILD-COMPLETE|COMPLETE|B:[^<]+|C" ;;
+    test)   SIGNALS="TEST-COMPLETE|COMPLETE|T:[^<]+" ;;
+    plan)   SIGNALS="PLANNED|P:[0-9]+"; MAX_ITERATIONS=1 ;;
+    review) SIGNALS="APPROVED|NEEDS-WORK|A|NW"; MAX_ITERATIONS=1 ;;
 esac
 
 # Header
@@ -191,7 +196,7 @@ for ((i=1; i<=MAX_ITERATIONS; i++)); do
     echo '```' >> progress.md
     
     # Check for completion signals (various formats)
-    if echo "$OUTPUT" | grep -qE "<(mothership|drone|probe|oracle|overseer)>($SIGNALS)<"; then
+    if echo "$OUTPUT" | grep -qE "<(mothership|vector|cortex|cipher|sentinel|arbiter|conductor|coalition|vault|telemetry)>($SIGNALS)<"; then
         echo ""
         success "Mothership complete! Finished at iteration $i."
         echo "$(date '+%Y-%m-%d %H:%M:%S') - Completed at iteration $i" >> progress.md
@@ -206,8 +211,8 @@ for ((i=1; i<=MAX_ITERATIONS; i++)); do
         exit 0
     fi
     
-    # Check for blocked signal
-    if echo "$OUTPUT" | grep -qE "BLOCKED"; then
+    # Check for blocked signal (verbose: BLOCKED, compressed: X:)
+    if echo "$OUTPUT" | grep -qE "BLOCKED|X:[^<]+"; then
         echo ""
         warn "Agent reported BLOCKED. Check output above for details."
         echo "$(date '+%Y-%m-%d %H:%M:%S') - Blocked at iteration $i" >> progress.md

@@ -1,6 +1,8 @@
-# 🛸 Mothership Lite
+# 🛸 Mothership Shard
 
 **One prompt. All modes. ~150 lines.**
+
+> *A single fragment. All you need to get started.*
 
 ```
 "Read .mothership/mothership.md and run: build"
@@ -8,19 +10,19 @@
 
 ---
 
-## Why Lite?
+## Why Shard?
 
-| | Ralph | Mothership (Full) | Mothership Lite |
+| | Ralph | Mothership (Array) | Mothership Shard |
 |---|-------|-------------------|-----------------|
-| Lines | ~100 | ~5,000 | ~150 |
+| Lines | ~100 | ~550 | ~150 |
 | Files | 3 | 15+ | 1 |
 | Agents | 1 | 9 | 1 (with modes) |
 | State | prd.json | Linear + checkpoint | Linear + checkpoint |
-| Planning | Manual | Oracle agent | Built-in mode |
-| Testing | Optional | Probe agent | Built-in mode |
-| Review | None | Overseer agent | Built-in mode |
+| Planning | Manual | Cipher agent | Built-in mode |
+| Testing | Optional | Cortex agent | Built-in mode |
+| Review | None | Sentinel agent | Built-in mode |
 
-**Lite = Ralph's simplicity + integrated planning/testing/review**
+**Shard = Ralph's simplicity + integrated planning/testing/review**
 
 ---
 
@@ -29,7 +31,7 @@
 ```bash
 # Install
 mkdir -p .mothership
-cp /path/to/mothership-lite/mothership.md .mothership/
+cp /path/to/mothership/shard/mothership.md .mothership/
 
 # Onboard (first time)
 "Read .mothership/mothership.md and run: onboard"
@@ -109,12 +111,26 @@ That's it. 4 lines. No YAML frontmatter complexity.
 
 ---
 
+## Upgrade Path
+
+Ready for more? Upgrade to **Array** (teams) or **Matrix** (enterprise):
+
+```bash
+# To Array (specialized agents)
+rm -rf .mothership && cp -r array/ .mothership/
+
+# To Matrix (enterprise with governance)
+rm -rf .mothership && cp -r matrix/ .mothership/
+```
+
+---
+
 ## Credits
 
 - [Geoffrey Huntley](https://ghuntley.com/ralph/) - Original Ralph concept
 - [Ryan Carson](https://github.com/snarktank/ralph) - Ralph implementation
 
-Lite keeps Ralph's genius (simple loop, fresh context, one task) and adds what it lacked (planning, testing, review).
+Shard keeps Ralph's genius (simple loop, fresh context, one task) and adds what it lacked (planning, testing, review).
 
 ---
 

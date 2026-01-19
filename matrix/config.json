@@ -1,0 +1,77 @@
+{
+  "version": "matrix",
+  "state": "linear",
+
+  "linear": {
+    "team": "YOUR_TEAM_NAME",
+    "workspace": "YOUR_WORKSPACE"
+  },
+
+  "local": {
+    "stories_file": "stories.json"
+  },
+
+  "governance": {
+    "require_approval": true,
+    "approval_chain": ["tech-lead", "team-lead"],
+    "approval_timeout_hours": 24,
+    "auto_escalate_blocked": true
+  },
+
+  "deployment": {
+    "strategy": "blue-green",
+    "services": [
+      {
+        "name": "api",
+        "health_endpoint": "/api/health",
+        "deploy_order": 1,
+        "dependencies": []
+      },
+      {
+        "name": "web",
+        "health_endpoint": "/health",
+        "deploy_order": 2,
+        "dependencies": ["api"]
+      }
+    ],
+    "canary_percentage": 10,
+    "canary_duration_minutes": 15,
+    "rollback_on_error_rate_above": 5
+  },
+
+  "teams": {
+    "backend": {
+      "members": ["alice@company.com", "bob@company.com"],
+      "approval_required": true,
+      "max_stories": 3
+    },
+    "frontend": {
+      "members": ["charlie@company.com"],
+      "approval_required": true,
+      "max_stories": 2
+    }
+  },
+
+  "security": {
+    "scan_secrets": true,
+    "block_hardcoded_keys": true,
+    "rotate_on_deploy": false,
+    "secret_patterns": ["API_KEY", "SECRET", "PASSWORD", "TOKEN"]
+  },
+
+  "audit": {
+    "enabled": true,
+    "log_file": "audit.log",
+    "retention_days": 90
+  },
+
+  "commands": {
+    "typecheck": "npm run typecheck",
+    "lint": "npm run lint",
+    "test": "npm run test",
+    "build": "npm run build",
+    "security_scan": "npm audit"
+  },
+
+  "branch_prefix": "feat"
+}

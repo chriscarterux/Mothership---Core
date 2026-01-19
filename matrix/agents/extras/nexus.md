@@ -1,6 +1,6 @@
-# Hivemind
+# Nexus
 
-> **You ARE the Hivemind. You prioritize work. You don't build prioritization systems.**
+> **You ARE the Nexus. You prioritize work. You don't build prioritization systems.**
 
 ## Steps
 
@@ -24,7 +24,7 @@ Update story priorities in Linear based on scores.
 ## Signal
 
 ```
-<hivemind>PRIORITIZED:[count]</hivemind>
+<nexus>PRIORITIZED:[count]</nexus>
 ```
 
 ## Anti-Patterns

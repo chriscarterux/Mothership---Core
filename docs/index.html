@@ -3,28 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mothership - AI Agents That Build Your Features</title>
-    <meta name="description" content="Tell Mothership what to build. It plans, implements, tests, and reviews. Ship features 10x faster.">
-    <meta property="og:title" content="Mothership - AI Agents That Build Your Features">
-    <meta property="og:description" content="Plan → Build → Test → Review → Ship. Automated.">
+    <title>Mothership - Xenotech AI Agents That Build Your Features</title>
+    <meta name="description" content="Tell Mothership what to build. Xenotech agents plan, implement, test, and review. Ship features 10x faster with AMP, Claude, Cursor, and more.">
+    <meta property="og:title" content="Mothership - Xenotech AI Agents That Build Your Features">
+    <meta property="og:description" content="Plan. Build. Test. Review. Ship. Automated with alien precision.">
     <meta property="og:type" content="website">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+
         :root {
-            --bg: #09090b;
-            --bg-subtle: #18181b;
-            --bg-muted: #27272a;
-            --border: #3f3f46;
-            --text: #fafafa;
-            --text-muted: #a1a1aa;
-            --accent: #3b82f6;
-            --accent-hover: #2563eb;
-            --success: #22c55e;
-            --gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            --bg: #050508;
+            --bg-subtle: #0a0a0f;
+            --bg-muted: #12121a;
+            --bg-card: #0d0d14;
+            --border: #1a1a2e;
+            --border-glow: #00d4ff33;
+            --text: #f0f0f5;
+            --text-muted: #8888a0;
+            --accent: #00d4ff;
+            --accent-secondary: #7c3aed;
+            --accent-tertiary: #06ffa5;
+            --success: #06ffa5;
+            --gradient: linear-gradient(135deg, #00d4ff 0%, #7c3aed 50%, #06ffa5 100%);
+            --gradient-subtle: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%);
+            --glow-cyan: 0 0 30px rgba(0, 212, 255, 0.3);
+            --glow-purple: 0 0 30px rgba(124, 58, 237, 0.3);
+            --glow-green: 0 0 30px rgba(6, 255, 165, 0.3);
         }
 
         body {
@@ -33,12 +40,54 @@
             color: var(--text);
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* Grid Background */
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .grid-bg::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(0, 212, 255, 0.08) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 50%, rgba(124, 58, 237, 0.05) 0%, transparent 40%),
+                        radial-gradient(ellipse at 20% 80%, rgba(6, 255, 165, 0.05) 0%, transparent 40%);
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Scroll Reveal Animation */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         /* Navigation */
@@ -48,8 +97,8 @@
             left: 0;
             right: 0;
             z-index: 100;
-            background: rgba(9, 9, 11, 0.8);
-            backdrop-filter: blur(12px);
+            background: rgba(5, 5, 8, 0.85);
+            backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border);
         }
 
@@ -57,39 +106,64 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            height: 64px;
+            height: 72px;
         }
 
         .logo {
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-weight: 700;
-            font-size: 1.25rem;
+            gap: 12px;
+            font-weight: 800;
+            font-size: 1.35rem;
             text-decoration: none;
             color: var(--text);
+            letter-spacing: -0.02em;
         }
 
         .logo-icon {
-            font-size: 1.5rem;
+            font-size: 1.75rem;
+            filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.5));
+        }
+
+        .logo span:last-child {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .nav-links {
             display: flex;
-            gap: 32px;
+            gap: 36px;
             list-style: none;
         }
 
         .nav-links a {
             color: var(--text-muted);
             text-decoration: none;
-            font-size: 0.875rem;
+            font-size: 0.9rem;
             font-weight: 500;
-            transition: color 0.2s;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.3s;
         }
 
         .nav-links a:hover {
-            color: var(--text);
+            color: var(--accent);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
         }
 
         .nav-cta {
@@ -101,153 +175,227 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            font-weight: 500;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
             text-decoration: none;
-            transition: all 0.2s;
+            transition: all 0.3s;
             cursor: pointer;
             border: none;
+            position: relative;
+            overflow: hidden;
         }
 
         .btn-primary {
             background: var(--gradient);
             color: white;
+            box-shadow: var(--glow-cyan);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
         }
 
         .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 0 40px rgba(0, 212, 255, 0.5), 0 0 80px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
         }
 
         .btn-secondary {
-            background: var(--bg-subtle);
+            background: var(--bg-card);
             color: var(--text);
             border: 1px solid var(--border);
         }
 
         .btn-secondary:hover {
-            background: var(--bg-muted);
-            border-color: var(--text-muted);
+            border-color: var(--accent);
+            box-shadow: var(--glow-cyan);
+            color: var(--accent);
         }
 
         /* Hero */
         .hero {
-            padding: 160px 0 100px;
+            padding: 180px 0 120px;
             text-align: center;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 400px;
+            background: radial-gradient(ellipse, rgba(0, 212, 255, 0.15) 0%, transparent 70%);
+            pointer-events: none;
         }
 
         .hero-badge {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 6px 14px;
-            background: var(--bg-subtle);
-            border: 1px solid var(--border);
+            gap: 10px;
+            padding: 8px 18px;
+            background: var(--gradient-subtle);
+            border: 1px solid var(--border-glow);
             border-radius: 100px;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-bottom: 24px;
+            font-size: 0.85rem;
+            color: var(--accent);
+            margin-bottom: 28px;
+            backdrop-filter: blur(10px);
         }
 
         .hero-badge-dot {
-            width: 6px;
-            height: 6px;
+            width: 8px;
+            height: 8px;
             background: var(--success);
             border-radius: 50%;
             animation: pulse 2s infinite;
+            box-shadow: 0 0 10px var(--success);
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(0.9); }
         }
 
         .hero h1 {
-            font-size: clamp(2.5rem, 6vw, 4rem);
-            font-weight: 700;
-            line-height: 1.1;
-            margin-bottom: 20px;
-            background: linear-gradient(180deg, #fff 0%, #a1a1aa 100%);
+            font-size: clamp(3rem, 7vw, 5rem);
+            font-weight: 800;
+            line-height: 1.05;
+            margin-bottom: 24px;
+            letter-spacing: -0.03em;
+        }
+
+        .hero h1 .text-gradient {
+            background: var(--gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
 
+        .hero h1 .text-glow {
+            text-shadow: 0 0 40px rgba(0, 212, 255, 0.5);
+        }
+
         .hero-subtitle {
-            font-size: 1.25rem;
+            font-size: 1.35rem;
             color: var(--text-muted);
-            max-width: 600px;
-            margin: 0 auto 40px;
+            max-width: 650px;
+            margin: 0 auto 48px;
+            line-height: 1.7;
+        }
+
+        .hero-subtitle strong {
+            color: var(--accent);
+            font-weight: 600;
         }
 
         .hero-cta {
             display: flex;
-            gap: 16px;
+            gap: 20px;
             justify-content: center;
             flex-wrap: wrap;
-            margin-bottom: 60px;
+            margin-bottom: 64px;
         }
 
         .hero-code {
-            background: var(--bg-subtle);
+            background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px 32px;
+            border-radius: 16px;
+            padding: 24px 40px;
             display: inline-block;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             color: var(--success);
+            position: relative;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        .hero-code::before {
+            content: '$';
+            color: var(--text-muted);
+            margin-right: 12px;
+        }
+
+        .hero-tools {
+            margin-top: 48px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .hero-tools span {
+            color: var(--accent);
         }
 
         /* Flow Section */
         .flow-section {
-            padding: 100px 0;
+            padding: 120px 0;
             border-top: 1px solid var(--border);
+            position: relative;
         }
 
         .section-header {
             text-align: center;
-            margin-bottom: 60px;
+            margin-bottom: 72px;
         }
 
         .section-label {
-            font-size: 0.75rem;
-            font-weight: 600;
+            font-size: 0.8rem;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.15em;
             color: var(--accent);
-            margin-bottom: 12px;
+            margin-bottom: 16px;
+            display: inline-block;
+            padding: 6px 16px;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 100px;
         }
 
         .section-title {
-            font-size: 2.25rem;
-            font-weight: 700;
-            margin-bottom: 16px;
+            font-size: 2.75rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            letter-spacing: -0.02em;
         }
 
         .section-desc {
             color: var(--text-muted);
-            max-width: 500px;
+            max-width: 550px;
             margin: 0 auto;
+            font-size: 1.1rem;
         }
 
         .flow-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 16px;
+            gap: 20px;
             position: relative;
         }
 
         .flow-connector {
             position: absolute;
-            top: 50px;
-            left: 10%;
-            right: 10%;
+            top: 60px;
+            left: 12%;
+            right: 12%;
             height: 2px;
-            background: var(--border);
+            background: linear-gradient(90deg, var(--accent), var(--accent-secondary), var(--accent-tertiary));
             z-index: 0;
+            opacity: 0.3;
         }
 
         .flow-step {
@@ -257,153 +405,388 @@
         }
 
         .flow-icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 16px;
-            background: var(--bg-subtle);
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            background: var(--bg-card);
             border: 2px solid var(--border);
-            border-radius: 50%;
+            border-radius: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
-            transition: all 0.3s;
+            font-size: 2.5rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+
+        .flow-icon::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 26px;
+            background: var(--gradient);
+            opacity: 0;
+            z-index: -1;
+            transition: opacity 0.4s;
         }
 
         .flow-step:hover .flow-icon {
-            border-color: var(--accent);
-            box-shadow: 0 0 24px rgba(59, 130, 246, 0.3);
-            transform: translateY(-4px);
+            transform: translateY(-8px) scale(1.05);
+            border-color: transparent;
+            box-shadow: var(--glow-cyan);
+        }
+
+        .flow-step:hover .flow-icon::before {
+            opacity: 1;
         }
 
         .flow-label {
-            font-weight: 600;
-            margin-bottom: 4px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 6px;
         }
 
         .flow-agent {
-            font-size: 0.8rem;
-            color: var(--text-muted);
+            font-size: 0.85rem;
+            color: var(--accent);
+            font-weight: 500;
         }
 
-        /* Features */
-        .features-section {
-            padding: 100px 0;
+        /* Tiers Section */
+        .tiers-section {
+            padding: 120px 0;
             border-top: 1px solid var(--border);
+            background: linear-gradient(180deg, var(--bg) 0%, var(--bg-subtle) 100%);
         }
 
-        .features-grid {
+        .tiers-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 28px;
         }
 
-        .feature-card {
-            background: var(--bg-subtle);
+        .tier-card {
+            background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 32px;
-            transition: all 0.3s;
+            border-radius: 24px;
+            padding: 40px 32px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s;
         }
 
-        .feature-card:hover {
+        .tier-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .tier-card:hover {
+            transform: translateY(-8px);
             border-color: var(--accent);
-            transform: translateY(-2px);
+            box-shadow: var(--glow-cyan);
         }
 
-        .feature-icon {
-            width: 48px;
-            height: 48px;
-            background: var(--bg-muted);
-            border-radius: 12px;
+        .tier-card:hover::before {
+            opacity: 1;
+        }
+
+        .tier-card.featured {
+            border-color: var(--accent);
+            box-shadow: var(--glow-cyan);
+        }
+
+        .tier-card.featured::before {
+            opacity: 1;
+        }
+
+        .tier-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 4px 12px;
+            background: var(--gradient);
+            border-radius: 100px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .tier-icon {
+            width: 64px;
+            height: 64px;
+            background: var(--gradient-subtle);
+            border: 1px solid var(--border-glow);
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 1.75rem;
+            margin-bottom: 24px;
+        }
+
+        .tier-name {
             font-size: 1.5rem;
-            margin-bottom: 20px;
-        }
-
-        .feature-card h3 {
-            font-size: 1.125rem;
-            font-weight: 600;
+            font-weight: 800;
             margin-bottom: 8px;
-        }
-
-        .feature-card p {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        /* Stats */
-        .stats-section {
-            padding: 80px 0;
-            border-top: 1px solid var(--border);
-            background: var(--bg-subtle);
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 32px;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: 700;
             background: var(--gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
 
+        .tier-target {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .tier-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .tier-agents {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tier-agent-tag {
+            padding: 6px 12px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        .tier-agent-tag.enterprise {
+            background: rgba(124, 58, 237, 0.1);
+            border-color: rgba(124, 58, 237, 0.2);
+            color: var(--accent-secondary);
+        }
+
+        /* Features */
+        .features-section {
+            padding: 120px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 28px;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 36px;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--gradient);
+            opacity: 0;
+            transition: opacity 0.4s;
+            z-index: 0;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+            box-shadow: var(--glow-cyan);
+        }
+
+        .feature-card:hover::after {
+            opacity: 0.03;
+        }
+
+        .feature-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--gradient-subtle);
+            border: 1px solid var(--border-glow);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            margin-bottom: 24px;
+            transition: all 0.4s;
+        }
+
+        .feature-card:hover .feature-icon {
+            box-shadow: var(--glow-cyan);
+            transform: scale(1.1);
+        }
+
+        .feature-card h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .feature-card p strong {
+            color: var(--accent);
+        }
+
+        /* Stats */
+        .stats-section {
+            padding: 100px 0;
+            border-top: 1px solid var(--border);
+            background: var(--bg-subtle);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stats-section::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 40px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat {
+            padding: 24px;
+        }
+
+        .stat-value {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
         .stat-label {
             color: var(--text-muted);
-            font-size: 0.875rem;
-            margin-top: 4px;
+            font-size: 0.95rem;
+            font-weight: 500;
         }
 
         /* CTA Section */
         .cta-section {
-            padding: 100px 0;
+            padding: 140px 0;
             text-align: center;
+            position: relative;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at 50% 100%, rgba(124, 58, 237, 0.15) 0%, transparent 60%);
+            pointer-events: none;
         }
 
         .cta-section h2 {
-            font-size: 2.25rem;
-            font-weight: 700;
-            margin-bottom: 16px;
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            letter-spacing: -0.02em;
+        }
+
+        .cta-section h2 span {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .cta-section p {
             color: var(--text-muted);
-            margin-bottom: 32px;
+            margin-bottom: 40px;
+            font-size: 1.15rem;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
         /* Footer */
         footer {
-            padding: 40px 0;
+            padding: 48px 0;
             border-top: 1px solid var(--border);
             text-align: center;
             color: var(--text-muted);
-            font-size: 0.875rem;
+            font-size: 0.9rem;
         }
 
         footer a {
             color: var(--text-muted);
             text-decoration: none;
-            transition: color 0.2s;
+            transition: all 0.3s;
         }
 
         footer a:hover {
-            color: var(--text);
+            color: var(--accent);
         }
 
         .footer-links {
             display: flex;
             justify-content: center;
-            gap: 32px;
-            margin-bottom: 16px;
+            gap: 40px;
+            margin-bottom: 20px;
+        }
+
+        .footer-tagline {
+            color: var(--accent);
+            font-style: italic;
         }
 
         /* Responsive */
@@ -415,6 +798,11 @@
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
+            .tiers-grid {
+                grid-template-columns: 1fr;
+                max-width: 500px;
+                margin: 0 auto;
+            }
         }
 
         @media (max-width: 768px) {
@@ -422,10 +810,19 @@
             .flow-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
-            .hero h1 { font-size: 2rem; }
+            .hero h1 { font-size: 2.5rem; }
             .hero-code {
-                font-size: 0.75rem;
-                padding: 16px 20px;
+                font-size: 0.8rem;
+                padding: 18px 24px;
+            }
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            .section-title {
+                font-size: 2rem;
+            }
+            .cta-section h2 {
+                font-size: 2rem;
             }
         }
 
@@ -437,18 +834,29 @@
                 grid-template-columns: 1fr;
             }
             .nav-cta .btn-secondary { display: none; }
+            .hero-cta {
+                flex-direction: column;
+                align-items: center;
+            }
+            .footer-links {
+                flex-direction: column;
+                gap: 16px;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="grid-bg"></div>
+
     <nav>
         <div class="container nav-content">
             <a href="#" class="logo">
-                <span class="logo-icon">🛸</span>
+                <span class="logo-icon">&#128760;</span>
                 <span>Mothership</span>
             </a>
             <ul class="nav-links">
                 <li><a href="#flow">How It Works</a></li>
+                <li><a href="#tiers">Architecture</a></li>
                 <li><a href="#features">Features</a></li>
                 <li><a href="./flowchart/">Demo</a></li>
                 <li><a href="https://github.com/chriscarterux/Mothership/blob/main/docs/github-actions.md">Docs</a></li>
@@ -467,60 +875,111 @@
         <div class="container">
             <div class="hero-badge">
                 <span class="hero-badge-dot"></span>
-                Open Source
+                Xenotech Open Source
             </div>
-            <h1>AI agents that build<br>your features</h1>
+            <h1>
+                <span class="text-glow">AI agents that</span><br>
+                <span class="text-gradient">build your features</span>
+            </h1>
             <p class="hero-subtitle">
-                Tell Mothership what to build. It plans, implements, tests, and reviews. 
-                Ship production-ready code 10x faster.
+                Tell Mothership what to build. <strong>Xenotech agents</strong> plan, implement, test, and review with alien precision. Ship production-ready code 10x faster.
             </p>
             <div class="hero-cta">
                 <a href="https://github.com/chriscarterux/Mothership" class="btn btn-primary">
                     Get Started
                 </a>
                 <a href="./flowchart/" class="btn btn-secondary">
-                    Watch Demo →
+                    Watch Demo
                 </a>
             </div>
-            <div class="hero-code">
-                curl -fsSL https://raw.githubusercontent.com/chriscarterux/Mothership/main/install.sh | bash
-            </div>
+            <div class="hero-code">curl -fsSL https://mothership.dev/install.sh | bash</div>
+            <p class="hero-tools">Works with <span>AMP</span>, Claude, Cursor, Aider, and more</p>
         </div>
     </section>
 
     <section class="flow-section" id="flow">
         <div class="container">
-            <div class="section-header">
-                <div class="section-label">Workflow</div>
+            <div class="section-header reveal">
+                <div class="section-label">Xenotech Workflow</div>
                 <h2 class="section-title">From idea to production</h2>
-                <p class="section-desc">Five specialized agents work in sequence to ship complete features.</p>
+                <p class="section-desc">Five specialized agents work in sequence to ship complete features with surgical precision.</p>
             </div>
-            <div class="flow-grid">
+            <div class="flow-grid reveal">
                 <div class="flow-connector"></div>
                 <div class="flow-step">
-                    <div class="flow-icon">📋</div>
+                    <div class="flow-icon">&#128270;</div>
                     <div class="flow-label">Plan</div>
-                    <div class="flow-agent">Oracle</div>
+                    <div class="flow-agent">Cipher</div>
                 </div>
                 <div class="flow-step">
-                    <div class="flow-icon">⚡</div>
+                    <div class="flow-icon">&#9889;</div>
                     <div class="flow-label">Build</div>
-                    <div class="flow-agent">Drone</div>
+                    <div class="flow-agent">Vector</div>
                 </div>
                 <div class="flow-step">
-                    <div class="flow-icon">🧪</div>
+                    <div class="flow-icon">&#128300;</div>
                     <div class="flow-label">Test</div>
-                    <div class="flow-agent">Probe</div>
+                    <div class="flow-agent">Cortex</div>
                 </div>
                 <div class="flow-step">
-                    <div class="flow-icon">🔍</div>
+                    <div class="flow-icon">&#128737;</div>
                     <div class="flow-label">Review</div>
-                    <div class="flow-agent">Overseer</div>
+                    <div class="flow-agent">Sentinel</div>
                 </div>
                 <div class="flow-step">
-                    <div class="flow-icon">🚀</div>
+                    <div class="flow-icon">&#128640;</div>
                     <div class="flow-label">Ship</div>
-                    <div class="flow-agent">Beacon</div>
+                    <div class="flow-agent">Pulse</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="tiers-section" id="tiers">
+        <div class="container">
+            <div class="section-header reveal">
+                <div class="section-label">Architecture</div>
+                <h2 class="section-title">Choose your deployment</h2>
+                <p class="section-desc">From solo developers to enterprise teams, scale your agent infrastructure as you grow.</p>
+            </div>
+            <div class="tiers-grid reveal">
+                <div class="tier-card">
+                    <div class="tier-icon">&#9670;</div>
+                    <div class="tier-name">Shard</div>
+                    <div class="tier-target">Solo Developers</div>
+                    <p class="tier-desc">Quick start with a single combined agent. Perfect for individual projects and rapid prototyping.</p>
+                    <div class="tier-agents">
+                        <span class="tier-agent-tag">Combined Agent</span>
+                    </div>
+                </div>
+                <div class="tier-card featured">
+                    <div class="tier-badge">Popular</div>
+                    <div class="tier-icon">&#9635;</div>
+                    <div class="tier-name">Array</div>
+                    <div class="tier-target">Teams</div>
+                    <p class="tier-desc">Standard workflows with 4 core agents plus 5 optional specialists. Built for team collaboration.</p>
+                    <div class="tier-agents">
+                        <span class="tier-agent-tag">Cipher</span>
+                        <span class="tier-agent-tag">Vector</span>
+                        <span class="tier-agent-tag">Cortex</span>
+                        <span class="tier-agent-tag">Sentinel</span>
+                        <span class="tier-agent-tag">Pulse</span>
+                        <span class="tier-agent-tag">+5 Optional</span>
+                    </div>
+                </div>
+                <div class="tier-card">
+                    <div class="tier-icon">&#9632;</div>
+                    <div class="tier-name">Matrix</div>
+                    <div class="tier-target">Enterprise</div>
+                    <p class="tier-desc">Complex orchestration with 5 additional enterprise agents for governance and scale.</p>
+                    <div class="tier-agents">
+                        <span class="tier-agent-tag">All Array Agents</span>
+                        <span class="tier-agent-tag enterprise">Arbiter</span>
+                        <span class="tier-agent-tag enterprise">Conductor</span>
+                        <span class="tier-agent-tag enterprise">Coalition</span>
+                        <span class="tier-agent-tag enterprise">Vault</span>
+                        <span class="tier-agent-tag enterprise">Telemetry</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -528,41 +987,41 @@
 
     <section class="features-section" id="features">
         <div class="container">
-            <div class="section-header">
-                <div class="section-label">Features</div>
+            <div class="section-header reveal">
+                <div class="section-label">Capabilities</div>
                 <h2 class="section-title">Everything you need</h2>
                 <p class="section-desc">Built for developers who want to ship faster without sacrificing quality.</p>
             </div>
-            <div class="features-grid">
+            <div class="features-grid reveal">
                 <div class="feature-card">
-                    <div class="feature-icon">🔮</div>
+                    <div class="feature-icon">&#128270;</div>
                     <h3>Auto-Planning</h3>
-                    <p>Oracle reads your docs and creates structured stories. No manual PRD writing needed.</p>
+                    <p><strong>Cipher</strong> reads your docs and codebase to create structured stories. No manual PRD writing needed.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">🔁</div>
+                    <div class="feature-icon">&#128260;</div>
                     <h3>Loop Until Done</h3>
-                    <p>Fresh context each iteration. Never loses track. Runs until the feature ships.</p>
+                    <p>Fresh context each iteration. Never loses track. Runs until the feature ships to production.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">🧪</div>
+                    <div class="feature-icon">&#128300;</div>
                     <h3>Chaos Testing</h3>
-                    <p>Probe finds edge cases you'd never think of. Null inputs, timeouts, auth bypasses.</p>
+                    <p><strong>Cortex</strong> finds edge cases you'd never think of. Null inputs, timeouts, auth bypasses, race conditions.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">👁️</div>
+                    <div class="feature-icon">&#128737;</div>
                     <h3>Code Review</h3>
-                    <p>Overseer checks security, patterns, and quality before any merge.</p>
+                    <p><strong>Sentinel</strong> checks security, patterns, performance, and code quality before any merge.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">🔌</div>
+                    <div class="feature-icon">&#128268;</div>
                     <h3>Any AI Tool</h3>
-                    <p>Works with Claude, Cursor, Aider, and more. Not locked to one provider.</p>
+                    <p>Works with <strong>AMP</strong>, Claude, Cursor, Aider, and more. Not locked to one provider.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">📊</div>
+                    <div class="feature-icon">&#128202;</div>
                     <h3>Any Tracker</h3>
-                    <p>Linear, Jira, GitHub Issues, Notion, Trello, or simple local JSON.</p>
+                    <p>Linear, Jira, GitHub Issues, Notion, Trello, or simple local JSON state management.</p>
                 </div>
             </div>
         </div>
@@ -570,34 +1029,39 @@
 
     <section class="stats-section">
         <div class="container">
-            <div class="stats-grid">
+            <div class="stats-grid reveal">
                 <div class="stat">
-                    <div class="stat-value">~1,000</div>
-                    <div class="stat-label">Tokens per run</div>
+                    <div class="stat-value">14</div>
+                    <div class="stat-label">Specialized Agents</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-value">$0.003</div>
-                    <div class="stat-label">Cost per iteration</div>
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">Deployment Tiers</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-value">4x</div>
-                    <div class="stat-label">More efficient than verbose prompts</div>
+                    <div class="stat-value">10x</div>
+                    <div class="stat-label">Faster Shipping</div>
                 </div>
                 <div class="stat">
                     <div class="stat-value">6</div>
-                    <div class="stat-label">State backend adapters</div>
+                    <div class="stat-label">State Adapters</div>
                 </div>
             </div>
         </div>
     </section>
 
     <section class="cta-section">
-        <div class="container">
-            <h2>Ready to ship faster?</h2>
-            <p>Get started in under a minute. Works with any codebase.</p>
-            <a href="https://github.com/chriscarterux/Mothership" class="btn btn-primary">
-                View on GitHub
-            </a>
+        <div class="container reveal">
+            <h2>Ready to <span>ship faster</span>?</h2>
+            <p>Get started in under a minute. Works with any codebase, any AI tool.</p>
+            <div class="cta-buttons">
+                <a href="https://github.com/chriscarterux/Mothership" class="btn btn-primary">
+                    View on GitHub
+                </a>
+                <a href="./flowchart/" class="btn btn-secondary">
+                    Try the Demo
+                </a>
+            </div>
         </div>
     </section>
 
@@ -609,8 +1073,43 @@
                 <a href="https://github.com/chriscarterux/Mothership/blob/main/CREDITS.md">Credits</a>
                 <a href="https://github.com/chriscarterux/Mothership/blob/main/LICENSE">MIT License</a>
             </div>
-            <p>"I come in peace. I leave with features." 🛸</p>
+            <p class="footer-tagline">"I come in peace. I leave with features."</p>
         </div>
     </footer>
+
+    <script>
+        // Scroll reveal animation
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Smooth scroll for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-# 🛸 Mothership Lite
+# 🛸 Mothership Shard
 
 You are an AI agent. Execute the MODE specified, then stop.
 
@@ -180,4 +180,4 @@ Or loop it:
 
 ---
 
-*~150 lines. One file. All modes. Ship it.* 🛸
+*~150 lines. One shard. All modes. Ship it.* 🛸

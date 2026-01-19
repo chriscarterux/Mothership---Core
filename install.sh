@@ -14,16 +14,18 @@ if ! git rev-parse --git-dir > /dev/null 2>&1; then
     exit 1
 fi
 
-# Ask for version
-echo "Which version?"
-echo "  1) lite  - One file, ~200 lines, simple"
-echo "  2) full  - Specialized agents, more control"
+# Ask for tier
+echo "Which tier?"
+echo "  1) shard  - One file, ~180 lines, solo devs"
+echo "  2) array  - Specialized agents, teams"
+echo "  3) matrix - Enterprise, governance & multi-service"
 echo ""
-read -p "Choice [1/2]: " VERSION_CHOICE
+read -p "Choice [1/2/3]: " TIER_CHOICE
 
-case "$VERSION_CHOICE" in
-    2|full) VERSION="full" ;;
-    *) VERSION="lite" ;;
+case "$TIER_CHOICE" in
+    2|array) TIER="array" ;;
+    3|matrix) TIER="matrix" ;;
+    *) TIER="shard" ;;
 esac
 
 # Create .mothership directory
@@ -32,18 +34,34 @@ mkdir -p .mothership
 # Download files
 BASE_URL="https://raw.githubusercontent.com/chriscarterux/Mothership/main"
 
-if [ "$VERSION" == "lite" ]; then
-    echo "Downloading lite version..."
-    curl -fsSL "$BASE_URL/lite/mothership.md" -o .mothership/mothership.md
+if [ "$TIER" == "shard" ]; then
+    echo "Downloading Shard tier..."
+    curl -fsSL "$BASE_URL/shard/mothership.md" -o .mothership/mothership.md
+
+elif [ "$TIER" == "array" ]; then
+    echo "Downloading Array tier..."
+    mkdir -p .mothership/agents/extras
+    curl -fsSL "$BASE_URL/array/mothership.md" -o .mothership/mothership.md
+    curl -fsSL "$BASE_URL/array/agents/cipher.md" -o .mothership/agents/cipher.md
+    curl -fsSL "$BASE_URL/array/agents/vector.md" -o .mothership/agents/vector.md
+    curl -fsSL "$BASE_URL/array/agents/cortex.md" -o .mothership/agents/cortex.md
+    curl -fsSL "$BASE_URL/array/agents/sentinel.md" -o .mothership/agents/sentinel.md
+    curl -fsSL "$BASE_URL/array/config.json" -o .mothership/config.json
+
 else
-    echo "Downloading full version..."
-    mkdir -p .mothership/agents
-    curl -fsSL "$BASE_URL/full/mothership.md" -o .mothership/mothership.md
-    curl -fsSL "$BASE_URL/full/agents/oracle.md" -o .mothership/agents/oracle.md
-    curl -fsSL "$BASE_URL/full/agents/drone.md" -o .mothership/agents/drone.md
-    curl -fsSL "$BASE_URL/full/agents/probe.md" -o .mothership/agents/probe.md
-    curl -fsSL "$BASE_URL/full/agents/overseer.md" -o .mothership/agents/overseer.md
-    curl -fsSL "$BASE_URL/full/config.json" -o .mothership/config.json
+    echo "Downloading Matrix tier..."
+    mkdir -p .mothership/agents/extras/enterprise
+    curl -fsSL "$BASE_URL/matrix/mothership.md" -o .mothership/mothership.md
+    curl -fsSL "$BASE_URL/matrix/agents/cipher.md" -o .mothership/agents/cipher.md
+    curl -fsSL "$BASE_URL/matrix/agents/vector.md" -o .mothership/agents/vector.md
+    curl -fsSL "$BASE_URL/matrix/agents/cortex.md" -o .mothership/agents/cortex.md
+    curl -fsSL "$BASE_URL/matrix/agents/sentinel.md" -o .mothership/agents/sentinel.md
+    curl -fsSL "$BASE_URL/matrix/agents/extras/enterprise/arbiter.md" -o .mothership/agents/extras/enterprise/arbiter.md
+    curl -fsSL "$BASE_URL/matrix/agents/extras/enterprise/conductor.md" -o .mothership/agents/extras/enterprise/conductor.md
+    curl -fsSL "$BASE_URL/matrix/agents/extras/enterprise/coalition.md" -o .mothership/agents/extras/enterprise/coalition.md
+    curl -fsSL "$BASE_URL/matrix/agents/extras/enterprise/vault.md" -o .mothership/agents/extras/enterprise/vault.md
+    curl -fsSL "$BASE_URL/matrix/agents/extras/enterprise/telemetry.md" -o .mothership/agents/extras/enterprise/telemetry.md
+    curl -fsSL "$BASE_URL/matrix/config.json" -o .mothership/config.json
 fi
 
 # Download loop script
@@ -74,7 +92,7 @@ echo ""
 echo "🛸 Installation complete!"
 echo ""
 echo "Created:"
-echo "  .mothership/         - Agent configuration"
+echo "  .mothership/         - Agent configuration ($TIER tier)"
 echo "  mothership.sh        - Loop script"
 echo ""
 echo "Next steps:"

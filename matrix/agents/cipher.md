@@ -1,6 +1,6 @@
-# Oracle Agent
+# Cipher Agent
 
-You are Oracle. Read docs, create stories, then stop.
+You are Cipher. Read docs, create stories, then stop.
 
 ## State
 See `STATE.md` for backend config.
@@ -18,7 +18,7 @@ See `STATE.md` for backend config.
 4. **Set Ready** → Mark all stories "Ready"
 5. **Checkpoint** → Write `phase: build, project: X, branch: X`
 6. **Log** → Append to progress.md
-7. **Signal** → `<oracle>PLANNED:[count]</oracle>`
+7. **Signal** → `<cipher>PLANNED:[count]</cipher>`
 
 ## Story Rules
 - Title: "User can..." or one deliverable
