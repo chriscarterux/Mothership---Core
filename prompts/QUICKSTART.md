@@ -1,5 +1,16 @@
 # Mothership Linear Setup - Quick Start
 
+## Prompt Templates
+
+| Prompt | Use Case |
+|--------|----------|
+| [full-linear-setup-prompt.md](./full-linear-setup-prompt.md) | Generic project with existing feature docs |
+| [camino-full-setup-prompt.md](./camino-full-setup-prompt.md) | Camino: Full workflow from content → features → Linear |
+| [camino-quickstart.md](./camino-quickstart.md) | Camino: Condensed version |
+| [docs-template.md](./docs-template.md) | Template for writing feature docs |
+
+---
+
 ## Prerequisites Checklist
 
 ```bash
