@@ -335,9 +335,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
             margin: 0 auto 20px;
             transition: all 0.3s;
+        }
+        .flow-icon svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--text);
         }
         .flow-step:hover .flow-icon {
             transform: scale(1.1);
@@ -411,8 +415,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.25rem;
             margin-bottom: 16px;
+        }
+        .feature-icon svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--text-muted);
         }
         .feature-card h3 {
             font-size: 1rem;
@@ -667,7 +675,7 @@
             <div class="hero-code fade-in fade-in-delay-3" onclick="copyToClipboard('./mothership.sh benchmark')">
                 <span class="prompt">$</span>
                 <span class="cmd">./mothership.sh benchmark</span>
-                <svg class="copy-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg class="copy-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                 </svg>
@@ -693,25 +701,48 @@
             </div>
             <div class="flow-grid">
                 <div class="flow-step reveal">
-                    <div class="flow-icon">&#128270;</div>
+                    <div class="flow-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/>
+                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                            <path d="M12 11h4"/><path d="M12 16h4"/>
+                            <path d="M8 11h.01"/><path d="M8 16h.01"/>
+                        </svg>
+                    </div>
                     <div class="flow-number">01</div>
                     <div class="flow-label">Plan</div>
                     <div class="flow-agent">Cipher</div>
                 </div>
                 <div class="flow-step reveal">
-                    <div class="flow-icon">&#9889;</div>
+                    <div class="flow-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="4 17 10 11 4 5"/>
+                            <line x1="12" x2="20" y1="19" y2="19"/>
+                        </svg>
+                    </div>
                     <div class="flow-number">02</div>
                     <div class="flow-label">Build</div>
                     <div class="flow-agent">Vector</div>
                 </div>
                 <div class="flow-step reveal">
-                    <div class="flow-icon">&#128300;</div>
+                    <div class="flow-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"/>
+                            <path d="M6.453 15h11.094"/>
+                            <path d="M8.5 2h7"/>
+                        </svg>
+                    </div>
                     <div class="flow-number">03</div>
                     <div class="flow-label">Test</div>
                     <div class="flow-agent">Cortex</div>
                 </div>
                 <div class="flow-step reveal">
-                    <div class="flow-icon">&#128737;</div>
+                    <div class="flow-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>
+                            <path d="m9 12 2 2 4-4"/>
+                        </svg>
+                    </div>
                     <div class="flow-number">04</div>
                     <div class="flow-label">Review</div>
                     <div class="flow-agent">Sentinel</div>
@@ -729,32 +760,72 @@
             </div>
             <div class="features-grid">
                 <div class="feature-card reveal">
-                    <div class="feature-icon">&#128221;</div>
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/>
+                            <path d="M14 2v4a2 2 0 0 0 2 2h4"/>
+                            <path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>
+                        </svg>
+                    </div>
                     <h3>Auto-Planning</h3>
                     <p>Cipher reads your docs and creates structured stories with acceptance criteria. No manual PRD writing.</p>
                 </div>
                 <div class="feature-card reveal">
-                    <div class="feature-icon">&#128260;</div>
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m17 2 4 4-4 4"/>
+                            <path d="M3 11v-1a4 4 0 0 1 4-4h14"/>
+                            <path d="m7 22-4-4 4-4"/>
+                            <path d="M21 13v1a4 4 0 0 1-4 4H3"/>
+                        </svg>
+                    </div>
                     <h3>Loop Until Done</h3>
                     <p>Fresh context each iteration. Never loses track. Runs autonomously until all stories complete.</p>
                 </div>
                 <div class="feature-card reveal">
-                    <div class="feature-icon">&#129514;</div>
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 2v17.5A2.5 2.5 0 0 1 6.5 22A2.5 2.5 0 0 1 4 19.5V2"/>
+                            <path d="M20 2v17.5a2.5 2.5 0 0 1-2.5 2.5a2.5 2.5 0 0 1-2.5-2.5V2"/>
+                            <path d="M3 2h7"/><path d="M14 2h7"/>
+                            <path d="M9 16H4"/><path d="M20 16h-5"/>
+                        </svg>
+                    </div>
                     <h3>Test Generation</h3>
                     <p>Cortex writes tests for edge cases: null inputs, error handling, boundary conditions.</p>
                 </div>
                 <div class="feature-card reveal">
-                    <div class="feature-icon">&#128274;</div>
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </div>
                     <h3>Code Review</h3>
                     <p>Sentinel checks security, patterns, and quality. Approves or creates fix tasks.</p>
                 </div>
                 <div class="feature-card reveal">
-                    <div class="feature-icon">&#127759;</div>
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="4" y="4" width="16" height="16" rx="2"/>
+                            <rect x="9" y="9" width="6" height="6"/>
+                            <path d="M15 2v2"/><path d="M15 20v2"/>
+                            <path d="M2 15h2"/><path d="M2 9h2"/>
+                            <path d="M20 15h2"/><path d="M20 9h2"/>
+                            <path d="M9 2v2"/><path d="M9 20v2"/>
+                        </svg>
+                    </div>
                     <h3>Any AI Tool</h3>
                     <p>Works with Claude, AMP, Cursor, Aider. Not locked to one provider or API.</p>
                 </div>
                 <div class="feature-card reveal">
-                    <div class="feature-icon">&#128230;</div>
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                            <path d="M3 5V19A9 3 0 0 0 21 19V5"/>
+                            <path d="M3 12A9 3 0 0 0 21 12"/>
+                        </svg>
+                    </div>
                     <h3>Linear or JSON</h3>
                     <p>Store stories in Linear for teams or local JSON for solo projects. Simple config switch.</p>
                 </div>
