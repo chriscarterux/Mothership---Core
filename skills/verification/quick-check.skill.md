@@ -7,10 +7,10 @@ Fast sanity check for common issues. Catches 80% of problems in 60 seconds.
 ### 1. Check for Empty Handlers
 ```bash
 echo "Checking UI wiring..."
-EMPTY=$(grep -rn "onClick={}\|onSubmit={}\|(() => {})" src/ 2>/dev/null | wc -l)
+EMPTY=$(grep -rn "onClick={}\|onSubmit={}\|() => {}" src/ 2>/dev/null | wc -l)
 if [ "$EMPTY" -gt 0 ]; then
   echo "FAIL: $EMPTY empty handlers found"
-  grep -rn "onClick={}\|onSubmit={}" src/ | head -10
+  grep -rn "onClick={}\|onSubmit={}\|() => {}" src/ | head -10
   ISSUES=$((ISSUES + EMPTY))
 fi
 ```

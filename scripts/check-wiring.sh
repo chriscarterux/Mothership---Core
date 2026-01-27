@@ -47,7 +47,7 @@ fi
 
 # Check for empty arrow functions as handlers
 echo "Checking for empty arrow function handlers..."
-EMPTY_ARROWS=$(grep -rn "={() => {})" "$SRC_DIR" 2>/dev/null || true)
+EMPTY_ARROWS=$(grep -rn "() => {}" "$SRC_DIR" 2>/dev/null || true)
 if [[ -n "$EMPTY_ARROWS" ]]; then
     echo -e "${RED}❌ Empty arrow function handlers found:${NC}"
     echo "$EMPTY_ARROWS" | head -20

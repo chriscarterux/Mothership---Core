@@ -49,8 +49,8 @@ grep -rn "onSubmit={undefined}" src/ 2>/dev/null
 
 # Empty arrow functions
 echo "Checking for empty arrow functions..."
-grep -rn "={() => {})" src/ 2>/dev/null
-grep -rn "={() => null)" src/ 2>/dev/null
+grep -rn "() => {}" src/ 2>/dev/null
+grep -rn "() => null" src/ 2>/dev/null
 
 # Console.log as only handler content
 echo "Checking for console-only handlers..."
@@ -250,7 +250,7 @@ ISSUES=0
 # 1. UI Wiring
 echo ""
 echo "▶ Checking UI wiring..."
-UI_ISSUES=$(grep -rn "onClick={}\|onSubmit={}\|={() => {})" src/ 2>/dev/null | wc -l)
+UI_ISSUES=$(grep -rn "onClick={}\|onSubmit={}\|() => {}" src/ 2>/dev/null | wc -l)
 if [ "$UI_ISSUES" -gt 0 ]; then
   echo "❌ Found $UI_ISSUES empty handlers"
   ISSUES=$((ISSUES + UI_ISSUES))

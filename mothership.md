@@ -106,7 +106,7 @@ Fast sanity check for the most common issues:
 
 1. **UI Wiring:**
    ```bash
-   grep -rn "onClick={}\|onSubmit={}\|={() => {})" src/
+   grep -rn "onClick={}\|onSubmit={}\|() => {}" src/
    ```
    Any output = FAIL
 

@@ -58,22 +58,34 @@ fi
 # Run verification based on type
 verify() {
     local t="${1:-all}"
+    local result=0
     echo -e "${B}Verifying: $t${N}"
 
     case "$t" in
-        ui)         ./scripts/check-wiring.sh src/ 2>/dev/null || true ;;
-        api)        ./scripts/check-api.sh 2>/dev/null || true ;;
-        database)   ./scripts/check-database.sh 2>/dev/null || true ;;
-        integration) ./scripts/check-integrations.sh 2>/dev/null || true ;;
-        fullstack|all) ./scripts/verify-all.sh 2>/dev/null || true ;;
+        ui)         ./scripts/check-wiring.sh src/ 2>/dev/null || result=$? ;;
+        api)        ./scripts/check-api.sh 2>/dev/null || result=$? ;;
+        database)   ./scripts/check-database.sh 2>/dev/null || result=$? ;;
+        integration) ./scripts/check-integrations.sh 2>/dev/null || result=$? ;;
+        fullstack|all) ./scripts/verify-all.sh 2>/dev/null || result=$? ;;
+        *)
+            echo -e "${R}Unknown verification type: $t${N}" >&2
+            result=2
+            ;;
     esac
+
+    if [[ $result -eq 0 ]]; then
+        echo -e "<atomic>VERIFIED:$t</atomic>"
+    else
+        echo -e "<atomic>UNWIRED:$t:$result</atomic>"
+        return $result
+    fi
 }
 
 # AI modes (need AI tool)
 AI_MODES="plan build test review status inventory"
 
 # Verification modes (can run without AI)
-VERIFY_MODES="quick-check verify test-matrix test-contracts test-rollback verify-env health-check"
+VERIFY_MODES="quick-check verify test-matrix test-contracts test-rollback verify-env health-check pre-deploy"
 
 # Main dispatch
 case "$MODE" in
@@ -107,22 +119,48 @@ case "$MODE" in
 
     quick-check|quick|q)
         echo -e "${B}Quick Check (sanity)${N}"
-        [[ -f "package.json" ]] && npm run build --if-present 2>/dev/null && echo -e "${G}✓ Build OK${N}" || true
-        [[ -f "package.json" ]] && npm test --if-present 2>/dev/null && echo -e "${G}✓ Tests OK${N}" || true
+        FAIL_COUNT=0
+        if [[ -f "package.json" ]]; then
+            if npm run build --if-present 2>/dev/null; then
+                echo -e "${G}✓ Build OK${N}"
+            else
+                echo -e "${R}✗ Build FAILED${N}"
+                FAIL_COUNT=$((FAIL_COUNT + 1))
+            fi
+            if npm test --if-present 2>/dev/null; then
+                echo -e "${G}✓ Tests OK${N}"
+            else
+                echo -e "${R}✗ Tests FAILED${N}"
+                FAIL_COUNT=$((FAIL_COUNT + 1))
+            fi
+        fi
         git status --short
-        echo -e "<sanity>QUICK-CHECK:pass</sanity>"
+        if [[ $FAIL_COUNT -eq 0 ]]; then
+            echo -e "<sanity>QUICK-CHECK:pass</sanity>"
+        else
+            echo -e "<sanity>QUICK-CHECK:fail:$FAIL_COUNT</sanity>"
+            exit 1
+        fi
         ;;
 
     test-matrix|matrix)
         echo -e "${B}Test Matrix (nexus)${N}"
-        ./scripts/verify-all.sh
-        echo -e "<nexus>MATRIX-PASS</nexus>"
+        if ./scripts/verify-all.sh; then
+            echo -e "<nexus>MATRIX-PASS:all</nexus>"
+        else
+            echo -e "<nexus>MATRIX-FAIL:all:verify</nexus>"
+            exit 1
+        fi
         ;;
 
     test-contracts|contracts)
         echo -e "${B}API Contracts (nexus)${N}"
-        ./scripts/check-api.sh
-        echo -e "<nexus>CONTRACTS-VALID</nexus>"
+        if ./scripts/check-api.sh; then
+            echo -e "<nexus>CONTRACTS-VALID</nexus>"
+        else
+            echo -e "<nexus>CONTRACTS-VIOLATED:1</nexus>"
+            exit 1
+        fi
         ;;
 
     test-rollback|rollback)
@@ -134,15 +172,42 @@ case "$MODE" in
 
     verify-env|env)
         echo -e "${B}Environment Check (sentinel)${N}"
-        ./scripts/check-integrations.sh 2>/dev/null || true
-        echo -e "<sentinel>ENV-VERIFIED</sentinel>"
+        if ./scripts/check-integrations.sh 2>/dev/null; then
+            echo -e "<sentinel>ENV-VERIFIED</sentinel>"
+        else
+            echo -e "<sentinel>ENV-FAILED:1</sentinel>"
+            exit 1
+        fi
         ;;
 
     health-check|health)
         echo -e "${B}Health Check (pulse)${N}"
-        ./scripts/check-api.sh 2>/dev/null || true
-        ./scripts/check-database.sh 2>/dev/null || true
-        echo -e "<pulse>HEALTHY</pulse>"
+        UNHEALTHY=""
+        if ! ./scripts/check-api.sh 2>/dev/null; then
+            UNHEALTHY="${UNHEALTHY}api,"
+        fi
+        if ! ./scripts/check-database.sh 2>/dev/null; then
+            UNHEALTHY="${UNHEALTHY}database,"
+        fi
+        if [[ -z "$UNHEALTHY" ]]; then
+            echo -e "<pulse>HEALTHY</pulse>"
+        else
+            # Remove trailing comma
+            UNHEALTHY="${UNHEALTHY%,}"
+            echo -e "<pulse>UNHEALTHY:$UNHEALTHY</pulse>"
+            exit 1
+        fi
+        ;;
+
+    pre-deploy|deploy-check)
+        echo -e "${B}Pre-Deploy Verification (mothership)${N}"
+        ENV_FILE="${TYPE:-.env}"
+        if ./scripts/check-deploy.sh "$ENV_FILE"; then
+            echo -e "<mothership>DEPLOY-READY</mothership>"
+        else
+            echo -e "<mothership>DEPLOY-BLOCKED</mothership>"
+            exit 1
+        fi
         ;;
 
     *)
