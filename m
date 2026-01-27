@@ -121,13 +121,13 @@ case "$MODE" in
                 echo -e "${G}✓ Build OK${N}"
             else
                 echo -e "${R}✗ Build FAILED${N}"
-                ((FAIL_COUNT++))
+                FAIL_COUNT=$((FAIL_COUNT + 1))
             fi
             if npm test --if-present 2>/dev/null; then
                 echo -e "${G}✓ Tests OK${N}"
             else
                 echo -e "${R}✗ Tests FAILED${N}"
-                ((FAIL_COUNT++))
+                FAIL_COUNT=$((FAIL_COUNT + 1))
             fi
         fi
         git status --short

@@ -111,7 +111,8 @@ EOF
             ;;
         build)
             local next=$(grep -m1 "^\- \[ \]" "$STORIES" 2>/dev/null || echo "none")
-            local type=$(echo "$next" | grep -Eo '\[(TYPE|ui|api|database|integration|fullstack)\]' | tr -d '[]' || echo "unknown")
+            local type=$(echo "$next" | grep -Eo '\[(TYPE|ui|api|database|integration|fullstack)\]' | tr -d '[]')
+            type=${type:-unknown}
             cat << EOF
 Next story: $next
 

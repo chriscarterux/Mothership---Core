@@ -101,13 +101,13 @@ if [[ "$USE_LOCAL_AI" == "true" ]] || [[ -n "$OLLAMA_URL" ]]; then
         # Test 3: Docker network reachability (critical for containerized apps)
         if command -v docker &> /dev/null && docker ps --format '{{.Names}}' | grep -q .; then
             echo -n "Testing Ollama from Docker network... "
-            # Check if Ollama is bound to localhost only (common mistake)
-            if ss -tlnp 2>/dev/null | grep ":11434" | grep -q "127.0.0.1"; then
+            # Check if Ollama is bound to localhost only (use lsof for macOS portability)
+            if lsof -iTCP:11434 -sTCP:LISTEN 2>/dev/null | grep -q "127.0.0.1\|localhost"; then
                 echo -e "${RED}❌ Ollama bound to localhost only${NC}"
                 echo "   Containers cannot reach it. Fix with:"
                 echo "   Environment=OLLAMA_HOST=0.0.0.0"
                 ISSUES=$((ISSUES + 1))
-            elif ss -tlnp 2>/dev/null | grep ":11434" | grep -q "\*:"; then
+            elif lsof -iTCP:11434 -sTCP:LISTEN 2>/dev/null | grep -q "\*:"; then
                 echo -e "${GREEN}✓ Ollama accessible from containers${NC}"
             else
                 echo -e "${YELLOW}⚠️  Could not verify Ollama binding${NC}"

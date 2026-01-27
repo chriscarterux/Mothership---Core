@@ -20,10 +20,16 @@ echo ""
 # 1. Check DATABASE_URL is set
 echo "1. Checking DATABASE_URL..."
 if [[ -z "$DATABASE_URL" ]]; then
-    # Try loading from .env (safely)
+    # Try loading from .env (safely - strip quotes and CRLF)
     if [[ -f ".env" ]]; then
         while IFS= read -r line || [[ -n "$line" ]]; do
-            [[ "$line" =~ ^DATABASE_URL= ]] && export "$line" && break
+            [[ "$line" =~ ^DATABASE_URL= ]] || continue
+            value=${line#DATABASE_URL=}
+            value=${value%$'\r'}
+            value=${value#\"}; value=${value%\"}
+            value=${value#\'}; value=${value%\'}
+            export DATABASE_URL="$value"
+            break
         done < .env
     fi
 fi

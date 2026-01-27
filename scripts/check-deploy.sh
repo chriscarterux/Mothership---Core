@@ -65,8 +65,10 @@ check_var "DATABASE_URL" true true
 check_var "NEXTAUTH_SECRET" true true
 check_var "NEXTAUTH_URL" true
 
-# Payment (if Stripe files exist)
-if ls app/api/*stripe* pages/api/*stripe* src/**/stripe* 2>/dev/null | grep -q .; then
+# Payment (if Stripe files exist) - use compgen/find for robustness
+if compgen -G "app/api/*stripe*" > /dev/null 2>&1 || \
+   compgen -G "pages/api/*stripe*" > /dev/null 2>&1 || \
+   find src -name "*stripe*" -print -quit 2>/dev/null | grep -q .; then
     check_var "STRIPE_SECRET_KEY" true true
     check_var "STRIPE_WEBHOOK_SECRET" true true
     check_var "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY" true
@@ -178,7 +180,8 @@ if [[ -n "$DATABASE_URL" ]]; then
 
         # Check for tables (migrations run?)
         TABLE_COUNT=$(psql "$DATABASE_URL" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public'" 2>/dev/null | tr -d ' ')
-        if [[ "$TABLE_COUNT" -eq 0 ]]; then
+        # Handle empty or non-numeric TABLE_COUNT
+        if [[ -z "$TABLE_COUNT" || "$TABLE_COUNT" -eq 0 ]]; then
             echo -e "${RED}❌ Database has 0 tables - run migrations!${NC}"
             ISSUES=$((ISSUES + 1))
         else
@@ -196,13 +199,15 @@ if [[ -n "$OLLAMA_URL" ]]; then
     if curl -s --max-time 5 "$OLLAMA_URL/api/tags" > /dev/null 2>&1; then
         echo -e "${GREEN}✓ Ollama reachable${NC}"
 
-        # Check binding for Docker access
+        # Check binding for Docker access (use lsof for macOS portability)
         OLLAMA_PORT="${OLLAMA_URL##*:}"
         OLLAMA_PORT="${OLLAMA_PORT%%/*}"
-        if ss -tlnp 2>/dev/null | grep ":$OLLAMA_PORT" | grep -q "127.0.0.1"; then
+        if lsof -iTCP:"$OLLAMA_PORT" -sTCP:LISTEN 2>/dev/null | grep -q "127.0.0.1\|localhost"; then
             echo -e "${RED}❌ Ollama only on localhost - containers can't reach it${NC}"
             echo "   Set OLLAMA_HOST=0.0.0.0 in Ollama config"
             ISSUES=$((ISSUES + 1))
+        elif lsof -iTCP:"$OLLAMA_PORT" -sTCP:LISTEN 2>/dev/null | grep -q "\*:"; then
+            echo -e "${GREEN}✓ Ollama accessible from containers${NC}"
         fi
     else
         echo -e "${RED}❌ Ollama not reachable at $OLLAMA_URL${NC}"
