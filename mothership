@@ -1,0 +1,534 @@
+#!/bin/bash
+# mothership - Complete system: structure + agents + verification + efficiency
+# Usage: ./mothership [goal]   or just: ./mothership
+set -e
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONFIG
+# ─────────────────────────────────────────────────────────────────────────────
+SHIP_DIR=".mothership"
+mkdir -p "$SHIP_DIR"
+
+# Artifacts (the flow)
+PRD="$SHIP_DIR/1-prd.md"
+SPECS="$SHIP_DIR/2-specs.md"
+STORIES="$SHIP_DIR/3-stories.md"
+LOG="$SHIP_DIR/log.md"
+
+# Colors
+R='\033[0;31m' G='\033[0;32m' Y='\033[0;33m' B='\033[0;34m' C='\033[0;36m' N='\033[0m'
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DETECTION
+# ─────────────────────────────────────────────────────────────────────────────
+detect_ai() {
+    for cmd in claude gemini codex opencode; do
+        command -v "$cmd" &>/dev/null && echo "$cmd" && return
+    done
+}
+
+detect_stack() {
+    [[ -f "package.json" ]] && echo "node" && return
+    [[ -f "requirements.txt" || -f "pyproject.toml" ]] && echo "python" && return
+    [[ -f "go.mod" ]] && echo "go" && return
+    [[ -f "Cargo.toml" ]] && echo "rust" && return
+    [[ -f "Gemfile" ]] && echo "ruby" && return
+    [[ -f "composer.json" ]] && echo "php" && return
+    echo "unknown"
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# VERIFICATION (the scripts that catch gaps)
+# ─────────────────────────────────────────────────────────────────────────────
+check_wiring() {
+    echo -e "${B}Checking wiring...${N}"
+    local issues=0
+
+    # Empty handlers
+    for pattern in 'onClick={}' 'onChange={}' 'onSubmit={}' 'onClick={() => {}}' 'onChange={() => {}}'; do
+        if grep -r "$pattern" --include="*.tsx" --include="*.jsx" --include="*.js" . 2>/dev/null | grep -v node_modules; then
+            ((issues++))
+        fi
+    done
+
+    # TODO/FIXME
+    if grep -rn "TODO\|FIXME" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" . 2>/dev/null | grep -v node_modules | head -5; then
+        ((issues++))
+    fi
+
+    [[ $issues -eq 0 ]] && echo -e "${G}✓ No wiring issues${N}" || echo -e "${Y}! Found $issues potential issues${N}"
+    return $issues
+}
+
+check_api() {
+    echo -e "${B}Checking API...${N}"
+    local stack=$(detect_stack)
+
+    case "$stack" in
+        node)
+            # Check if server responds
+            if curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/health 2>/dev/null | grep -q "200"; then
+                echo -e "${G}✓ API responding${N}"
+            else
+                echo -e "${Y}! API not responding (may not be running)${N}"
+            fi
+            ;;
+        python)
+            if curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/health 2>/dev/null | grep -q "200"; then
+                echo -e "${G}✓ API responding${N}"
+            else
+                echo -e "${Y}! API not responding${N}"
+            fi
+            ;;
+    esac
+}
+
+check_database() {
+    echo -e "${B}Checking database...${N}"
+
+    # Check DATABASE_URL
+    if [[ -z "${DATABASE_URL:-}" ]]; then
+        if [[ -f ".env" ]] && grep -q "DATABASE_URL" .env; then
+            echo -e "${G}✓ DATABASE_URL in .env${N}"
+        else
+            echo -e "${Y}! DATABASE_URL not set${N}"
+            return 1
+        fi
+    else
+        echo -e "${G}✓ DATABASE_URL set${N}"
+    fi
+
+    # Check migrations
+    if [[ -d "prisma" ]]; then
+        echo -e "${G}✓ Prisma detected${N}"
+    elif [[ -d "migrations" ]] || [[ -d "alembic" ]]; then
+        echo -e "${G}✓ Migrations directory exists${N}"
+    fi
+}
+
+check_integrations() {
+    echo -e "${B}Checking integrations...${N}"
+    local issues=0
+
+    # Check for API keys
+    for key in STRIPE_SECRET_KEY OPENAI_API_KEY ANTHROPIC_API_KEY RESEND_API_KEY SENDGRID_API_KEY; do
+        if grep -q "$key" .env 2>/dev/null || [[ -n "${!key:-}" ]]; then
+            echo -e "  ${G}✓${N} $key"
+        fi
+    done
+
+    # Check Redis
+    if command -v redis-cli &>/dev/null && redis-cli ping 2>/dev/null | grep -q "PONG"; then
+        echo -e "  ${G}✓${N} Redis"
+    fi
+}
+
+verify_by_type() {
+    local type="$1"
+    echo ""
+    echo -e "${C}═══ Verification: $type ═══${N}"
+
+    case "$type" in
+        ui)         check_wiring ;;
+        api)        check_api ;;
+        database)   check_database ;;
+        integration) check_integrations ;;
+        fullstack)  check_wiring; check_api; check_database; check_integrations ;;
+        *)          check_wiring; check_api ;;
+    esac
+}
+
+run_tests() {
+    echo -e "${B}Running tests...${N}"
+    local stack=$(detect_stack)
+
+    case "$stack" in
+        node)   npm test --if-present 2>/dev/null && echo -e "${G}✓ Tests pass${N}" || echo -e "${R}✗ Tests failed${N}" ;;
+        python) pytest -q 2>/dev/null && echo -e "${G}✓ Tests pass${N}" || echo -e "${R}✗ Tests failed${N}" ;;
+        go)     go test ./... 2>/dev/null && echo -e "${G}✓ Tests pass${N}" || echo -e "${R}✗ Tests failed${N}" ;;
+        rust)   cargo test --quiet 2>/dev/null && echo -e "${G}✓ Tests pass${N}" || echo -e "${R}✗ Tests failed${N}" ;;
+        *)      echo -e "${Y}! Unknown stack, skipping tests${N}" ;;
+    esac
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PHASE DETECTION (auto-pilot)
+# ─────────────────────────────────────────────────────────────────────────────
+detect_phase() {
+    # Priority 1: Uncommitted changes
+    [[ -n $(git status --porcelain 2>/dev/null) ]] && echo "commit" && return
+
+    # Priority 2: No PRD
+    [[ ! -f "$PRD" ]] && echo "prd" && return
+
+    # Priority 3: No specs
+    [[ ! -f "$SPECS" ]] && echo "specs" && return
+
+    # Priority 4: No stories
+    [[ ! -f "$STORIES" ]] && echo "stories" && return
+
+    # Priority 5: Uncompleted stories
+    if grep -q "^\- \[ \]" "$STORIES" 2>/dev/null; then
+        echo "build"
+        return
+    fi
+
+    # Priority 6: All done, need review
+    echo "review"
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AGENTS & SIGNALS
+# ─────────────────────────────────────────────────────────────────────────────
+# Phase → Agent mapping (original 4 + verification agents)
+# Original: Plan=Cipher, Build=Vector, Test=Cortex, Review=Sentinel
+get_agent() {
+    case "$1" in
+        # Core flow (original 4)
+        prd)         echo "cipher" ;;    # Plan phase
+        specs)       echo "cipher" ;;    # Plan phase
+        stories)     echo "cipher" ;;    # Plan phase
+        build)       echo "vector" ;;    # Build phase
+        test)        echo "cortex" ;;    # Test phase
+        review)      echo "sentinel" ;;  # Review phase
+        commit)      echo "vector" ;;    # Build phase
+        # Verification agents
+        verify)      echo "atomic" ;;
+        quick-check) echo "sanity" ;;
+        test-matrix) echo "nexus" ;;
+        contracts)   echo "nexus" ;;
+        rollback)    echo "phoenix" ;;
+        inventory)   echo "scanner" ;;
+        health)      echo "pulse" ;;
+        env)         echo "sentinel" ;;
+        *)           echo "mothership" ;;
+    esac
+}
+
+get_signal() {
+    local agent=$(get_agent "$1")
+    case "$1" in
+        prd)         echo "<$agent>PRD_COMPLETE</$agent>" ;;
+        specs)       echo "<$agent>SPECS_COMPLETE</$agent>" ;;
+        stories)     echo "<$agent>PLANNED:N</$agent>" ;;
+        build)       echo "<$agent>BUILT:ID</$agent> or <$agent>BUILD_COMPLETE</$agent>" ;;
+        test)        echo "<$agent>TESTED</$agent>" ;;
+        review)      echo "<$agent>APPROVED</$agent> or <$agent>NEEDS_WORK:reason</$agent>" ;;
+        commit)      echo "<$agent>COMMITTED</$agent>" ;;
+        verify)      echo "<$agent>VERIFIED</$agent> or <$agent>UNWIRED:issues</$agent>" ;;
+        quick-check) echo "<$agent>QUICK_CHECK:pass</$agent>" ;;
+        test-matrix) echo "<$agent>MATRIX_PASS</$agent>" ;;
+        contracts)   echo "<$agent>CONTRACTS_VALID</$agent>" ;;
+        rollback)    echo "<$agent>ROLLBACK_VERIFIED</$agent>" ;;
+        inventory)   echo "<$agent>INVENTORY_COMPLETE</$agent>" ;;
+        health)      echo "<$agent>HEALTHY</$agent>" ;;
+        env)         echo "<$agent>ENV_VERIFIED</$agent>" ;;
+        *)           echo "<$agent>DONE</$agent>" ;;
+    esac
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PROMPTS (minimal, phase-specific)
+# ─────────────────────────────────────────────────────────────────────────────
+get_prompt() {
+    local phase="$1"
+    local goal="$2"
+
+    case "$phase" in
+        prd)
+            cat << EOF
+${goal:+Goal: $goal}
+
+Create $PRD with:
+## Problem
+What problem are we solving? Who has it?
+
+## Success Criteria
+Measurable outcomes (not features). How do we know we succeeded?
+
+## Scope
+IN: What we're building
+OUT: What we're NOT building
+
+## Constraints
+Technical limitations, deadlines, dependencies
+
+Signal: $(get_signal prd)
+EOF
+            ;;
+
+        specs)
+            cat << EOF
+Read: $PRD
+
+Create $SPECS with:
+
+## Database Schema
+Tables, fields, types, relations. Be specific.
+\`\`\`sql
+CREATE TABLE users (...)
+\`\`\`
+
+## API Endpoints
+Method, path, request body, response body, status codes.
+\`\`\`
+POST /api/auth/login
+Request: { email, password }
+Response: { token, user }
+Errors: 401 Invalid credentials
+\`\`\`
+
+## Components
+UI component tree with props and state.
+\`\`\`
+LoginPage
+├── LoginForm (onSubmit, isLoading)
+│   ├── EmailInput (value, onChange, error)
+│   └── PasswordInput (value, onChange, error)
+└── AuthLinks
+\`\`\`
+
+Each spec must be testable. Include the test.
+
+Signal: $(get_signal specs)
+EOF
+            ;;
+
+        stories)
+            cat << EOF
+Read: $PRD, $SPECS
+
+Create $STORIES with atomic stories:
+
+\`\`\`markdown
+- [ ] [database] Create users table
+  AC: Table exists with id, email, password_hash, created_at
+  Verify: \`psql -c "\\d users"\` shows columns
+
+- [ ] [api] POST /api/auth/login endpoint
+  AC: Returns 200 + token for valid credentials, 401 for invalid
+  Verify: \`curl -X POST /api/auth/login -d '{"email":"test@test.com","password":"test"}'\`
+
+- [ ] [ui] LoginForm component
+  AC: Submits credentials, shows loading state, handles errors
+  Verify: Click submit, see spinner, see error message on failure
+\`\`\`
+
+Types: database, api, ui, integration, fullstack
+Order: database → api → ui (dependencies first)
+Each story: ONE thing, testable, independent
+
+Signal: $(get_signal stories)
+EOF
+            ;;
+
+        build)
+            local next=$(grep -m1 "^\- \[ \]" "$STORIES" 2>/dev/null || echo "")
+            local type=$(echo "$next" | grep -oP '\[(database|api|ui|integration|fullstack)\]' | tr -d '[]' || echo "fullstack")
+            cat << EOF
+Current story: $next
+
+1. Implement ONLY this story
+2. Before committing, verify:
+   ${type} type checks:
+   - database: table exists, migrations run, can insert/select
+   - api: endpoint responds, returns expected format
+   - ui: component renders, handlers fire, no empty onClick
+   - integration: external service responds
+   - fullstack: ALL of the above
+3. Update $STORIES: change [ ] to [x]
+4. Commit with message: "feat($type): <what you built>"
+
+If blocked, signal: <cipher>BLOCKED:reason</cipher>
+If done with this story: $(get_signal build)
+If no more stories: <cipher>BUILD_COMPLETE</cipher>
+EOF
+            ;;
+
+        test)
+            cat << EOF
+Run comprehensive tests:
+
+1. Unit tests: \`npm test\` / \`pytest\` / \`go test\`
+2. Type checks: \`tsc --noEmit\` / \`mypy\`
+3. Lint: \`eslint\` / \`ruff\`
+4. API tests: hit each endpoint
+5. DB tests: check migrations, constraints
+
+Fix any failures before signaling.
+
+Signal: $(get_signal test)
+EOF
+            ;;
+
+        review)
+            cat << EOF
+Final review. Check:
+
+1. PRD success criteria met?
+2. All stories completed?
+3. No empty handlers (onClick={}, onChange={})?
+4. API endpoints all respond correctly?
+5. Database tables created and writable?
+6. Environment variables documented?
+7. Security: no hardcoded secrets, SQL injection, XSS?
+8. Edge cases handled?
+
+If issues found: $(get_signal review | grep NEEDS_WORK)
+If approved: $(get_signal review | grep APPROVED)
+EOF
+            ;;
+
+        commit)
+            cat << EOF
+Uncommitted changes detected.
+
+1. Review changes: \`git diff\`
+2. Run tests
+3. If good: commit with descriptive message
+4. If not: fix issues first
+
+Signal: $(get_signal commit)
+EOF
+            ;;
+
+        *)
+            echo "Unknown phase: $phase"
+            ;;
+    esac
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RUN AI
+# ─────────────────────────────────────────────────────────────────────────────
+run_ai() {
+    local prompt="$1"
+    local ai=$(detect_ai)
+
+    if [[ -z "$ai" ]]; then
+        echo -e "${R}No AI found. Install: claude, gemini, codex, or opencode${N}"
+        exit 1
+    fi
+
+    case "$ai" in
+        claude)   claude --print -p "$prompt" ;;
+        gemini)   gemini "$prompt" ;;
+        codex)    codex "$prompt" ;;
+        opencode) opencode "$prompt" ;;
+    esac
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STATUS
+# ─────────────────────────────────────────────────────────────────────────────
+show_status() {
+    local phase=$(detect_phase)
+    local agent=$(get_agent "$phase")
+    local ai=$(detect_ai)
+    local stack=$(detect_stack)
+
+    echo -e "${C}┌───────────────────────────────────────────────────────┐${N}"
+    echo -e "${C}│${N}  ${B}MOTHERSHIP${N}                                          ${C}│${N}"
+    echo -e "${C}├───────────────────────────────────────────────────────┤${N}"
+    echo -e "${C}│${N}  AI: ${G}${ai:-none}${N}    Stack: ${Y}$stack${N}                      ${C}│${N}"
+    echo -e "${C}├───────────────────────────────────────────────────────┤${N}"
+
+    # Artifacts
+    [[ -f "$PRD" ]] && echo -e "${C}│${N}  ${G}✓${N} PRD      " || echo -e "${C}│${N}  ${Y}○${N} PRD       (pending)"
+    [[ -f "$SPECS" ]] && echo -e "${C}│${N}  ${G}✓${N} Specs    " || echo -e "${C}│${N}  ${Y}○${N} Specs     (pending)"
+
+    if [[ -f "$STORIES" ]]; then
+        local done=$(grep -c "^\- \[x\]" "$STORIES" 2>/dev/null || echo 0)
+        local todo=$(grep -c "^\- \[ \]" "$STORIES" 2>/dev/null || echo 0)
+        echo -e "${C}│${N}  ${G}✓${N} Stories   ${G}$done done${N}, ${Y}$todo todo${N}"
+    else
+        echo -e "${C}│${N}  ${Y}○${N} Stories   (pending)"
+    fi
+
+    echo -e "${C}├───────────────────────────────────────────────────────┤${N}"
+    echo -e "${C}│${N}  Phase: ${B}$phase${N}    Agent: ${Y}$agent${N}"
+    echo -e "${C}└───────────────────────────────────────────────────────┘${N}"
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MAIN
+# ─────────────────────────────────────────────────────────────────────────────
+main() {
+    local goal="$*"
+    local phase=$(detect_phase)
+    local agent=$(get_agent "$phase")
+
+    show_status
+    echo ""
+
+    # Run verification before build phase
+    if [[ "$phase" == "build" ]]; then
+        local next=$(grep -m1 "^\- \[ \]" "$STORIES" 2>/dev/null || echo "")
+        local type=$(echo "$next" | grep -oP '\[(database|api|ui|integration|fullstack)\]' | tr -d '[]' || echo "fullstack")
+        verify_by_type "$type"
+        echo ""
+    fi
+
+    # Run tests before review
+    if [[ "$phase" == "review" ]]; then
+        run_tests
+        echo ""
+    fi
+
+    # Get and run prompt
+    local prompt=$(get_prompt "$phase" "$goal")
+
+    echo -e "${G}▶ Phase: $phase${N} → Agent: ${Y}$agent${N}"
+    echo ""
+
+    run_ai "$prompt"
+
+    # Log
+    echo "$(date -Iseconds) | $phase | $agent" >> "$LOG"
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CLI
+# ─────────────────────────────────────────────────────────────────────────────
+case "${1:-}" in
+    -h|--help|help)
+        echo -e "${B}mothership${N} - Complete autonomous development"
+        echo ""
+        echo "Usage:"
+        echo "  ./mothership              Auto-detect phase, run it"
+        echo "  ./mothership [goal]       Start with a goal"
+        echo "  ./mothership status       Show current state"
+        echo "  ./mothership verify       Run all verifications"
+        echo "  ./mothership reset        Clear state, start fresh"
+        echo ""
+        echo "Flow (original 4 agents):"
+        echo "  01 Plan   → cipher     PRD, specs, stories"
+        echo "  02 Build  → vector     Implement with verification"
+        echo "  03 Test   → cortex     Run test suite"
+        echo "  04 Review → sentinel   Final quality check"
+        echo ""
+        echo "Verification agents:"
+        echo "  sanity   quick-check   Fast build/lint"
+        echo "  atomic   verify        Runtime wiring"
+        echo "  nexus    test-matrix   8-layer coverage"
+        echo "  nexus    contracts     API validation"
+        echo "  phoenix  rollback      Rollback testing"
+        echo "  scanner  inventory     Codebase mapping"
+        echo "  pulse    health        Integration health"
+        echo ""
+        echo "State: .mothership/"
+        ;;
+    status)
+        show_status
+        ;;
+    verify)
+        verify_by_type "${2:-fullstack}"
+        ;;
+    reset)
+        rm -rf "$SHIP_DIR"
+        echo -e "${G}✓ Reset complete${N}"
+        ;;
+    *)
+        main "$@"
+        ;;
+esac
