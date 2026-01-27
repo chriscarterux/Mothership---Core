@@ -1,5 +1,5 @@
 #!/bin/bash
-# mothership - Complete system: structure + agents + verification + efficiency
+# mothership - Complete system: context + structure + agents + verification
 # Usage: ./mothership [goal]   or just: ./mothership
 set -e
 
@@ -14,6 +14,10 @@ PRD="$SHIP_DIR/1-prd.md"
 SPECS="$SHIP_DIR/2-specs.md"
 STORIES="$SHIP_DIR/3-stories.md"
 LOG="$SHIP_DIR/log.md"
+
+# Context files
+CONTEXT_DIR="."
+SKILLS_DIR=".mothership/skills"
 
 # Colors
 R='\033[0;31m' G='\033[0;32m' Y='\033[0;33m' B='\033[0;34m' C='\033[0;36m' N='\033[0m'
@@ -35,6 +39,566 @@ detect_stack() {
     [[ -f "Gemfile" ]] && echo "ruby" && return
     [[ -f "composer.json" ]] && echo "php" && return
     echo "unknown"
+}
+
+detect_framework() {
+    # Node frameworks
+    [[ -f "next.config.js" || -f "next.config.mjs" ]] && echo "nextjs" && return
+    [[ -f "nuxt.config.js" || -f "nuxt.config.ts" ]] && echo "nuxt" && return
+    [[ -f "svelte.config.js" ]] && echo "sveltekit" && return
+    [[ -f "astro.config.mjs" ]] && echo "astro" && return
+    [[ -f "vite.config.js" || -f "vite.config.ts" ]] && echo "vite" && return
+
+    # Python frameworks
+    [[ -d "app" ]] && grep -q "FastAPI\|fastapi" *.py 2>/dev/null && echo "fastapi" && return
+    [[ -f "manage.py" ]] && echo "django" && return
+    [[ -d "flask" ]] || grep -q "Flask" *.py 2>/dev/null && echo "flask" && return
+
+    echo "unknown"
+}
+
+detect_database() {
+    [[ -d "prisma" ]] && echo "prisma" && return
+    [[ -d "drizzle" ]] && echo "drizzle" && return
+    [[ -f "knexfile.js" ]] && echo "knex" && return
+    [[ -d "alembic" ]] && echo "sqlalchemy" && return
+    [[ -f "diesel.toml" ]] && echo "diesel" && return
+    grep -q "mongoose" package.json 2>/dev/null && echo "mongoose" && return
+    echo "unknown"
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONTEXT GENERATION (like SummonAI Kit but free)
+# ─────────────────────────────────────────────────────────────────────────────
+generate_context() {
+    local stack=$(detect_stack)
+    local framework=$(detect_framework)
+    local database=$(detect_database)
+
+    echo -e "${B}Generating context files...${N}"
+    echo -e "  Stack: ${G}$stack${N}"
+    echo -e "  Framework: ${G}$framework${N}"
+    echo -e "  Database: ${G}$database${N}"
+    echo ""
+
+    # Scan codebase
+    local src_dirs=$(find . -type d -name "src" -o -name "app" -o -name "lib" -o -name "components" 2>/dev/null | grep -v node_modules | head -5)
+    local entry_files=$(find . -maxdepth 2 -name "index.*" -o -name "main.*" -o -name "app.*" 2>/dev/null | grep -v node_modules | head -5)
+    local config_files=$(find . -maxdepth 1 -name "*.config.*" -o -name ".env*" 2>/dev/null | head -10)
+
+    # Generate CLAUDE.md
+    generate_claude_md "$stack" "$framework" "$database" "$src_dirs" "$entry_files"
+
+    # Generate other AI context files
+    generate_gemini_md "$stack" "$framework" "$database"
+    generate_codex_md "$stack" "$framework" "$database"
+    generate_opencode_md "$stack" "$framework" "$database"
+
+    # Generate AGENTS.md
+    generate_agents_md
+
+    # Generate skills
+    mkdir -p "$SKILLS_DIR"
+    generate_skills "$stack" "$framework" "$database"
+
+    echo -e "${G}✓ Context generation complete${N}"
+    echo ""
+    echo "Generated files:"
+    echo "  CLAUDE.md      - Context for Claude"
+    echo "  GEMINI.md      - Context for Gemini"
+    echo "  CODEX.md       - Context for Codex"
+    echo "  OPENCODE.md    - Context for OpenCode"
+    echo "  AGENTS.md      - Agent documentation"
+    echo "  $SKILLS_DIR/   - Stack-specific skills"
+}
+
+generate_claude_md() {
+    local stack="$1" framework="$2" database="$3" src_dirs="$4" entry_files="$5"
+
+    cat > "$CONTEXT_DIR/CLAUDE.md" << EOF
+# Project Context
+
+## Stack
+- **Language**: $stack
+- **Framework**: $framework
+- **Database**: $database
+
+## Structure
+\`\`\`
+$(find . -maxdepth 2 -type d | grep -v node_modules | grep -v .git | grep -v .mothership | head -20 | sed 's/^//')
+\`\`\`
+
+## Key Files
+$(echo "$entry_files" | sed 's/^/- /')
+
+## Commands
+\`\`\`bash
+# Development
+$(case "$stack" in
+    node) echo "npm run dev" ;;
+    python) echo "python -m uvicorn app.main:app --reload" ;;
+    go) echo "go run ." ;;
+    rust) echo "cargo run" ;;
+    *) echo "# See package.json or Makefile" ;;
+esac)
+
+# Test
+$(case "$stack" in
+    node) echo "npm test" ;;
+    python) echo "pytest" ;;
+    go) echo "go test ./..." ;;
+    rust) echo "cargo test" ;;
+    *) echo "# See package.json or Makefile" ;;
+esac)
+
+# Build
+$(case "$stack" in
+    node) echo "npm run build" ;;
+    python) echo "python -m build" ;;
+    go) echo "go build" ;;
+    rust) echo "cargo build --release" ;;
+    *) echo "# See package.json or Makefile" ;;
+esac)
+\`\`\`
+
+## Conventions
+- Use TypeScript/type hints where possible
+- Follow existing code style
+- Write tests for new features
+- Keep functions small and focused
+
+## Mothership Integration
+This project uses Mothership for autonomous development.
+
+### Workflow
+\`\`\`
+./mothership              # Auto-run next phase
+./mothership status       # Show progress
+./mothership onboard      # Regenerate this file
+\`\`\`
+
+### Agents
+| Agent | Role |
+|-------|------|
+| cipher | Planning (PRD, specs, stories) |
+| vector | Building (implement, verify) |
+| cortex | Testing (run tests, fix) |
+| sentinel | Review (security, quality) |
+
+### Signals
+Emit signals to indicate completion:
+- \`<cipher>PRD_COMPLETE</cipher>\`
+- \`<vector>BUILT:ID</vector>\`
+- \`<cortex>TESTED</cortex>\`
+- \`<sentinel>APPROVED</sentinel>\`
+EOF
+    echo -e "  ${G}✓${N} CLAUDE.md"
+}
+
+generate_gemini_md() {
+    local stack="$1" framework="$2" database="$3"
+
+    cat > "$CONTEXT_DIR/GEMINI.md" << EOF
+# Gemini Context
+
+## Project: $(basename "$(pwd)")
+Stack: $stack | Framework: $framework | DB: $database
+
+## Quick Reference
+- Run: \`$(case "$stack" in node) echo "npm run dev";; python) echo "uvicorn app.main:app";; *) echo "see package.json";; esac)\`
+- Test: \`$(case "$stack" in node) echo "npm test";; python) echo "pytest";; *) echo "see package.json";; esac)\`
+- Build: \`$(case "$stack" in node) echo "npm run build";; python) echo "python -m build";; *) echo "see package.json";; esac)\`
+
+## Mothership Workflow
+Run \`./mothership\` to auto-detect the next phase.
+Emit signals like \`<vector>BUILT:story-id</vector>\` when done.
+
+## Key Directories
+$(find . -maxdepth 1 -type d | grep -v "^\.$" | grep -v node_modules | grep -v .git | head -10 | sed 's/^/- /')
+EOF
+    echo -e "  ${G}✓${N} GEMINI.md"
+}
+
+generate_codex_md() {
+    local stack="$1" framework="$2" database="$3"
+
+    cat > "$CONTEXT_DIR/CODEX.md" << EOF
+# Codex Context
+
+Project: $(basename "$(pwd)")
+Stack: $stack / $framework / $database
+
+## Commands
+dev:   $(case "$stack" in node) echo "npm run dev";; python) echo "uvicorn app.main:app";; *) echo "check scripts";; esac)
+test:  $(case "$stack" in node) echo "npm test";; python) echo "pytest";; *) echo "check scripts";; esac)
+build: $(case "$stack" in node) echo "npm run build";; python) echo "pip install -e .";; *) echo "check scripts";; esac)
+
+## Mothership
+Auto-pilot: ./mothership
+Status: ./mothership status
+Reset: ./mothership reset
+
+## Signals (emit when done)
+Planning done: <cipher>PRD_COMPLETE</cipher>
+Built story:   <vector>BUILT:ID</vector>
+Tests pass:    <cortex>TESTED</cortex>
+Review done:   <sentinel>APPROVED</sentinel>
+EOF
+    echo -e "  ${G}✓${N} CODEX.md"
+}
+
+generate_opencode_md() {
+    local stack="$1" framework="$2" database="$3"
+
+    cat > "$CONTEXT_DIR/OPENCODE.md" << EOF
+# OpenCode Context
+
+## $(basename "$(pwd)")
+$stack | $framework | $database
+
+## Run
+\`\`\`
+$(case "$stack" in
+    node) echo "npm run dev" ;;
+    python) echo "uvicorn app.main:app --reload" ;;
+    go) echo "go run ." ;;
+    *) echo "# check package.json" ;;
+esac)
+\`\`\`
+
+## Mothership Integration
+\`\`\`bash
+./mothership           # Auto-run
+./mothership status    # Progress
+./mothership onboard   # Regenerate context
+\`\`\`
+
+## Agent Signals
+| Done With | Emit |
+|-----------|------|
+| PRD | \`<cipher>PRD_COMPLETE</cipher>\` |
+| Build | \`<vector>BUILT:id</vector>\` |
+| Test | \`<cortex>TESTED</cortex>\` |
+| Review | \`<sentinel>APPROVED</sentinel>\` |
+EOF
+    echo -e "  ${G}✓${N} OPENCODE.md"
+}
+
+generate_agents_md() {
+    cat > "$CONTEXT_DIR/AGENTS.md" << 'EOF'
+# Mothership Agents
+
+## Core Agents (Development Flow)
+
+| Agent | Phase | Role | Signal |
+|-------|-------|------|--------|
+| **cipher** | Plan | Creates PRD, specs, stories | `<cipher>PRD_COMPLETE</cipher>` |
+| **vector** | Build | Implements stories with verification | `<vector>BUILT:ID</vector>` |
+| **cortex** | Test | Runs test suite, fixes failures | `<cortex>TESTED</cortex>` |
+| **sentinel** | Review | Security, quality, completeness | `<sentinel>APPROVED</sentinel>` |
+
+## Verification Agents
+
+| Agent | Mode | Purpose | Signal |
+|-------|------|---------|--------|
+| **sanity** | quick-check | Fast build/lint check | `<sanity>QUICK_CHECK:pass</sanity>` |
+| **atomic** | verify | Runtime wiring verification | `<atomic>VERIFIED</atomic>` |
+| **nexus** | test-matrix | 8-layer test coverage | `<nexus>MATRIX_PASS</nexus>` |
+| **nexus** | contracts | API contract validation | `<nexus>CONTRACTS_VALID</nexus>` |
+| **phoenix** | rollback | Rollback testing | `<phoenix>ROLLBACK_VERIFIED</phoenix>` |
+| **scanner** | inventory | Codebase mapping | `<scanner>INVENTORY_COMPLETE</scanner>` |
+| **pulse** | health | Integration health check | `<pulse>HEALTHY</pulse>` |
+
+## Flow
+
+```
+cipher/plan → vector/build → cortex/test → sentinel/review
+     │              │              │              │
+     ▼              ▼              ▼              ▼
+   PRD.md      Implement      Run Tests      Final QA
+   Specs.md    + Verify       Fix Fails      Security
+   Stories.md  + Commit       Coverage       Approval
+```
+
+## Signal Protocol
+
+1. **Always emit a signal** when completing a phase
+2. **Format**: `<agent>SIGNAL</agent>` or `<agent>SIGNAL:data</agent>`
+3. **Loop signals**: `BUILT:ID` continues, `BUILD_COMPLETE` stops
+4. **Blocked**: `<agent>BLOCKED:reason</agent>`
+
+## Verification Types
+
+When building, verify based on story type:
+
+| Type | Check |
+|------|-------|
+| `[database]` | Table exists, migrations run, writable |
+| `[api]` | Endpoint responds, correct format |
+| `[ui]` | Component renders, handlers wired |
+| `[integration]` | External service connected |
+| `[fullstack]` | All of the above |
+EOF
+    echo -e "  ${G}✓${N} AGENTS.md"
+}
+
+generate_skills() {
+    local stack="$1" framework="$2" database="$3"
+
+    # Common skills
+    cat > "$SKILLS_DIR/plan.skill.md" << 'EOF'
+# Plan Skill
+
+## When to Use
+Creating PRD, specs, or stories for a new feature.
+
+## Steps
+1. Understand the goal
+2. Create PRD with problem, success criteria, scope
+3. Create specs with database schema, API endpoints, components
+4. Create atomic stories with TYPE, AC, and verification
+
+## Story Format
+```markdown
+- [ ] [TYPE] Title
+  AC: Specific, testable acceptance criteria
+  Verify: Command or action to verify it works
+```
+
+## Types
+- `[database]` - Schema, migrations, queries
+- `[api]` - Endpoints, request/response
+- `[ui]` - Components, handlers, state
+- `[integration]` - External services
+- `[fullstack]` - End-to-end feature
+
+## Signal
+`<cipher>PLANNED:N</cipher>` where N is story count
+EOF
+
+    cat > "$SKILLS_DIR/build.skill.md" << 'EOF'
+# Build Skill
+
+## When to Use
+Implementing a story from the backlog.
+
+## Steps
+1. Read the story and its AC
+2. Implement the feature
+3. Verify based on story TYPE:
+   - database: `psql -c "\d tablename"`
+   - api: `curl localhost:3000/api/endpoint`
+   - ui: Click/interact, check DevTools
+   - integration: Test external connection
+4. Mark story complete `[x]`
+5. Commit with `feat(type): description`
+
+## Pre-Commit Checklist
+- [ ] No empty handlers (onClick={})
+- [ ] No TODO/FIXME left behind
+- [ ] Tests pass
+- [ ] Types compile
+
+## Signal
+`<vector>BUILT:story-id</vector>` or `<vector>BUILD_COMPLETE</vector>`
+EOF
+
+    cat > "$SKILLS_DIR/test.skill.md" << 'EOF'
+# Test Skill
+
+## When to Use
+Running test suite and fixing failures.
+
+## Steps
+1. Run unit tests
+2. Run type checks
+3. Run linter
+4. Fix any failures
+5. Check coverage
+
+## Commands by Stack
+- Node: `npm test`, `npx tsc --noEmit`, `npm run lint`
+- Python: `pytest`, `mypy .`, `ruff check .`
+- Go: `go test ./...`, `go vet ./...`
+- Rust: `cargo test`, `cargo clippy`
+
+## Signal
+`<cortex>TESTED</cortex>`
+EOF
+
+    cat > "$SKILLS_DIR/review.skill.md" << 'EOF'
+# Review Skill
+
+## When to Use
+Final quality check before shipping.
+
+## Checklist
+1. [ ] PRD success criteria met?
+2. [ ] All stories completed?
+3. [ ] No empty handlers?
+4. [ ] API endpoints respond correctly?
+5. [ ] Database tables exist and writable?
+6. [ ] Environment variables documented?
+7. [ ] No hardcoded secrets?
+8. [ ] Edge cases handled?
+9. [ ] Error messages helpful?
+10. [ ] Performance acceptable?
+
+## Signal
+`<sentinel>APPROVED</sentinel>` or `<sentinel>NEEDS_WORK:reason</sentinel>`
+EOF
+
+    # Stack-specific skills
+    case "$stack" in
+        node)
+            cat > "$SKILLS_DIR/node.skill.md" << 'EOF'
+# Node.js Skill
+
+## Package Management
+```bash
+npm install <package>      # Add dependency
+npm install -D <package>   # Add dev dependency
+npm update                 # Update all
+npm audit fix             # Fix vulnerabilities
+```
+
+## Scripts
+```bash
+npm run dev       # Development server
+npm run build     # Production build
+npm test          # Run tests
+npm run lint      # Lint code
+```
+
+## Common Patterns
+- Use ESM imports: `import x from 'y'`
+- Prefer async/await over callbacks
+- Use TypeScript for type safety
+- Environment variables in `.env`
+EOF
+            ;;
+        python)
+            cat > "$SKILLS_DIR/python.skill.md" << 'EOF'
+# Python Skill
+
+## Package Management
+```bash
+pip install <package>          # Add dependency
+pip install -e .               # Install local package
+pip freeze > requirements.txt  # Lock versions
+```
+
+## Commands
+```bash
+python -m uvicorn app.main:app --reload  # Dev server
+pytest                                    # Run tests
+mypy .                                    # Type check
+ruff check .                              # Lint
+```
+
+## Common Patterns
+- Use type hints: `def func(x: str) -> int:`
+- Use dataclasses or Pydantic models
+- Use pathlib for file paths
+- Use context managers for resources
+EOF
+            ;;
+    esac
+
+    # Framework-specific skills
+    case "$framework" in
+        nextjs)
+            cat > "$SKILLS_DIR/nextjs.skill.md" << 'EOF'
+# Next.js Skill
+
+## Structure
+```
+app/              # App router pages
+  page.tsx        # Route component
+  layout.tsx      # Layout wrapper
+  loading.tsx     # Loading state
+  error.tsx       # Error boundary
+components/       # Reusable components
+lib/              # Utilities
+```
+
+## Patterns
+- Server Components by default
+- `'use client'` for interactivity
+- `use server` for server actions
+- API routes in `app/api/`
+
+## Commands
+```bash
+npm run dev       # Dev server (port 3000)
+npm run build     # Production build
+npm run start     # Start production
+```
+EOF
+            ;;
+        fastapi)
+            cat > "$SKILLS_DIR/fastapi.skill.md" << 'EOF'
+# FastAPI Skill
+
+## Structure
+```
+app/
+  main.py         # App entry, routes
+  models.py       # Pydantic models
+  database.py     # DB connection
+  routers/        # Route modules
+```
+
+## Patterns
+```python
+@app.get("/items/{id}")
+async def get_item(id: int) -> Item:
+    return await db.get(id)
+```
+
+## Commands
+```bash
+uvicorn app.main:app --reload  # Dev server
+pytest                          # Run tests
+```
+EOF
+            ;;
+    esac
+
+    # Database-specific skills
+    case "$database" in
+        prisma)
+            cat > "$SKILLS_DIR/prisma.skill.md" << 'EOF'
+# Prisma Skill
+
+## Commands
+```bash
+npx prisma generate        # Generate client
+npx prisma db push         # Push schema
+npx prisma migrate dev     # Create migration
+npx prisma studio          # Open GUI
+```
+
+## Schema
+```prisma
+model User {
+  id    Int     @id @default(autoincrement())
+  email String  @unique
+  posts Post[]
+}
+```
+
+## Usage
+```typescript
+const user = await prisma.user.create({
+  data: { email: 'test@test.com' }
+})
+```
+EOF
+            ;;
+    esac
+
+    echo -e "  ${G}✓${N} Skills generated in $SKILLS_DIR/"
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -497,9 +1061,14 @@ case "${1:-}" in
         echo "Usage:"
         echo "  ./mothership              Auto-detect phase, run it"
         echo "  ./mothership [goal]       Start with a goal"
+        echo "  ./mothership onboard      Generate context (CLAUDE.md, skills)"
         echo "  ./mothership status       Show current state"
         echo "  ./mothership verify       Run all verifications"
         echo "  ./mothership reset        Clear state, start fresh"
+        echo ""
+        echo "Context generation (like SummonAI Kit):"
+        echo "  onboard    Generate CLAUDE.md, GEMINI.md, CODEX.md, OPENCODE.md"
+        echo "             + AGENTS.md + stack-specific skills"
         echo ""
         echo "Flow (original 4 agents):"
         echo "  01 Plan   → cipher     PRD, specs, stories"
@@ -517,6 +1086,9 @@ case "${1:-}" in
         echo "  pulse    health        Integration health"
         echo ""
         echo "State: .mothership/"
+        ;;
+    onboard)
+        generate_context
         ;;
     status)
         show_status
