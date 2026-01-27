@@ -649,25 +649,93 @@ check_api() {
 
 check_database() {
     echo -e "${B}Checking database...${N}"
+    local issues=0
 
-    # Check DATABASE_URL
-    if [[ -z "${DATABASE_URL:-}" ]]; then
+    # Load .env if exists
+    [[ -f ".env" ]] && source .env 2>/dev/null
+
+    local db_url="${DATABASE_URL:-}"
+
+    # Check DATABASE_URL exists
+    if [[ -z "$db_url" ]]; then
         if [[ -f ".env" ]] && grep -q "DATABASE_URL" .env; then
-            echo -e "${G}✓ DATABASE_URL in .env${N}"
+            db_url=$(grep "DATABASE_URL" .env | cut -d'=' -f2-)
+            echo -e "  ${G}✓${N} DATABASE_URL in .env"
         else
-            echo -e "${Y}! DATABASE_URL not set${N}"
-            return 1
+            echo -e "  ${R}✗${N} DATABASE_URL ${R}MISSING${N}"
+            ((issues++))
+            return $issues
         fi
     else
-        echo -e "${G}✓ DATABASE_URL set${N}"
+        echo -e "  ${G}✓${N} DATABASE_URL set"
     fi
 
-    # Check migrations
-    if [[ -d "prisma" ]]; then
-        echo -e "${G}✓ Prisma detected${N}"
-    elif [[ -d "migrations" ]] || [[ -d "alembic" ]]; then
-        echo -e "${G}✓ Migrations directory exists${N}"
+    # Try to connect and check tables
+    if command -v psql &>/dev/null; then
+        echo -e "  ${Y}~${N} Testing connection..."
+
+        # Test connection
+        if psql "$db_url" -c "SELECT 1" &>/dev/null; then
+            echo -e "  ${G}✓${N} Database connection OK"
+
+            # Check table count
+            local table_count=$(psql "$db_url" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'" 2>/dev/null | tr -d ' ')
+
+            if [[ "$table_count" == "0" ]]; then
+                echo -e "  ${R}✗${N} Database has ${R}0 TABLES${N} - migrations not run!"
+                echo -e "      Run: npx prisma migrate deploy  OR  npx drizzle-kit migrate"
+                ((issues++))
+            else
+                echo -e "  ${G}✓${N} Database has $table_count tables"
+            fi
+        else
+            echo -e "  ${R}✗${N} Database connection ${R}FAILED${N}"
+            echo -e "      Check credentials and network access"
+            ((issues++))
+        fi
+    elif command -v docker &>/dev/null && docker ps | grep -q postgres; then
+        echo -e "  ${Y}~${N} Testing via Docker..."
+
+        local container=$(docker ps --format '{{.Names}}' | grep -i postgres | head -1)
+        if [[ -n "$container" ]]; then
+            local table_count=$(docker exec "$container" psql -U postgres -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'" 2>/dev/null | tr -d ' ')
+
+            if [[ "$table_count" == "0" ]]; then
+                echo -e "  ${R}✗${N} Database has ${R}0 TABLES${N} - migrations not run!"
+                ((issues++))
+            else
+                echo -e "  ${G}✓${N} Database has $table_count tables (via Docker)"
+            fi
+        fi
+    else
+        echo -e "  ${Y}~${N} Cannot test connection (no psql or docker)"
     fi
+
+    # Check ORM/migrations exist
+    if [[ -d "prisma" ]]; then
+        if [[ -d "prisma/migrations" ]] && ls prisma/migrations/*/migration.sql &>/dev/null; then
+            local migration_count=$(ls -d prisma/migrations/*/ 2>/dev/null | wc -l | tr -d ' ')
+            echo -e "  ${G}✓${N} Prisma: $migration_count migrations found"
+        else
+            echo -e "  ${Y}~${N} Prisma: No migrations yet"
+        fi
+    elif [[ -d "drizzle" ]]; then
+        if ls drizzle/*.sql &>/dev/null; then
+            local migration_count=$(ls drizzle/*.sql 2>/dev/null | wc -l | tr -d ' ')
+            echo -e "  ${G}✓${N} Drizzle: $migration_count migrations found"
+        else
+            echo -e "  ${Y}~${N} Drizzle: No migrations yet"
+        fi
+    elif [[ -d "alembic" ]]; then
+        echo -e "  ${G}✓${N} Alembic detected"
+    fi
+
+    if [[ $issues -gt 0 ]]; then
+        echo ""
+        echo -e "  ${R}Database issues will cause runtime failures!${N}"
+        return 1
+    fi
+    return 0
 }
 
 check_integrations() {
@@ -854,6 +922,135 @@ check_integrations() {
     fi
 }
 
+check_docker() {
+    echo -e "${B}Checking Docker containers...${N}"
+    local issues=0
+    local warnings=0
+
+    if ! command -v docker &>/dev/null; then
+        echo -e "  ${Y}○${N} Docker not installed (skipping)"
+        return 0
+    fi
+
+    if ! docker info &>/dev/null; then
+        echo -e "  ${Y}~${N} Docker not running"
+        return 0
+    fi
+
+    # Check for docker-compose files
+    local compose_file=""
+    for f in docker-compose.yml docker-compose.yaml compose.yml compose.yaml; do
+        [[ -f "$f" ]] && compose_file="$f" && break
+    done
+
+    if [[ -z "$compose_file" ]]; then
+        echo -e "  ${Y}○${N} No docker-compose file found"
+        return 0
+    fi
+
+    echo -e "  ${G}✓${N} Found $compose_file"
+
+    # Check running containers
+    local running=$(docker ps --format '{{.Names}}\t{{.Status}}' 2>/dev/null)
+
+    if [[ -z "$running" ]]; then
+        echo -e "  ${Y}~${N} No containers running"
+        return 0
+    fi
+
+    echo -e "\n${C}Container Status:${N}"
+    while IFS=$'\t' read -r name status; do
+        if [[ "$status" == *"healthy"* ]]; then
+            echo -e "  ${G}✓${N} $name: $status"
+        elif [[ "$status" == *"unhealthy"* ]]; then
+            echo -e "  ${R}✗${N} $name: ${R}$status${N}"
+            ((issues++))
+        elif [[ "$status" == *"Up"* ]]; then
+            echo -e "  ${G}✓${N} $name: $status"
+        else
+            echo -e "  ${Y}~${N} $name: $status"
+            ((warnings++))
+        fi
+    done <<< "$running"
+
+    # Check for expected services from compose file
+    if [[ -f "$compose_file" ]]; then
+        local expected_services=$(grep -E "^  [a-z].*:$" "$compose_file" 2>/dev/null | sed 's/://' | tr -d ' ')
+
+        echo -e "\n${C}Service Check:${N}"
+        for service in $expected_services; do
+            if docker ps --format '{{.Names}}' | grep -qi "$service"; then
+                echo -e "  ${G}✓${N} $service running"
+            else
+                echo -e "  ${R}✗${N} $service ${R}NOT RUNNING${N}"
+                ((issues++))
+            fi
+        done
+    fi
+
+    # Check for env var mismatches (common issue!)
+    echo -e "\n${C}Environment Check:${N}"
+    for container in $(docker ps --format '{{.Names}}' | grep -iE "postgres|mysql|redis"); do
+        if [[ "$container" == *postgres* ]]; then
+            local container_pass=$(docker exec "$container" printenv POSTGRES_PASSWORD 2>/dev/null)
+            local env_pass=$(grep "POSTGRES_PASSWORD" .env 2>/dev/null | cut -d'=' -f2)
+
+            if [[ -n "$container_pass" && -n "$env_pass" && "$container_pass" != "$env_pass" ]]; then
+                echo -e "  ${R}✗${N} PASSWORD MISMATCH: Container vs .env for $container"
+                echo -e "      Container: ${container_pass:0:10}..."
+                echo -e "      .env: ${env_pass:0:10}..."
+                ((issues++))
+            elif [[ -n "$container_pass" ]]; then
+                echo -e "  ${G}✓${N} $container credentials consistent"
+            fi
+        fi
+    done
+
+    if [[ $issues -gt 0 ]]; then
+        echo ""
+        echo -e "${R}┌─────────────────────────────────────────────┐${N}"
+        echo -e "${R}│  ✗ $issues DOCKER ISSUE(S) - FIX BEFORE DEPLOY │${N}"
+        echo -e "${R}└─────────────────────────────────────────────┘${N}"
+        return 1
+    fi
+    return 0
+}
+
+check_local_ai() {
+    echo -e "${B}Checking Local AI (Ollama)...${N}"
+
+    local ollama_url="${OLLAMA_URL:-http://localhost:11434}"
+
+    # Check if Ollama is configured
+    if [[ -z "${OLLAMA_URL:-}" ]] && ! grep -q "OLLAMA_URL" .env 2>/dev/null; then
+        echo -e "  ${Y}○${N} OLLAMA_URL not configured (will use fallback responses)"
+        return 0
+    fi
+
+    # Check if Ollama is running
+    if curl -s "$ollama_url/api/tags" &>/dev/null; then
+        echo -e "  ${G}✓${N} Ollama running at $ollama_url"
+
+        # Check for models
+        local models=$(curl -s "$ollama_url/api/tags" 2>/dev/null | grep -oP '"name":"[^"]+' | cut -d'"' -f4)
+
+        if [[ -n "$models" ]]; then
+            echo -e "  ${G}✓${N} Models available:"
+            for model in $models; do
+                echo -e "      - $model"
+            done
+        else
+            echo -e "  ${Y}~${N} No models installed"
+            echo -e "      Run: ollama pull mistral"
+        fi
+    else
+        echo -e "  ${R}✗${N} Ollama not responding at $ollama_url"
+        echo -e "      Run: ollama serve"
+        return 1
+    fi
+    return 0
+}
+
 verify_by_type() {
     local type="$1"
     echo ""
@@ -864,7 +1061,10 @@ verify_by_type() {
         api)        check_api ;;
         database)   check_database ;;
         integration) check_integrations ;;
-        fullstack)  check_wiring; check_api; check_database; check_integrations ;;
+        docker)     check_docker ;;
+        ai)         check_local_ai ;;
+        fullstack)  check_wiring; check_api; check_database; check_integrations; check_docker ;;
+        all)        check_wiring; check_api; check_database; check_integrations; check_docker; check_local_ai ;;
         *)          check_wiring; check_api ;;
     esac
 }
