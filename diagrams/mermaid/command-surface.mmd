@@ -1,0 +1,7 @@
+flowchart TB
+  Plan["./m plan feature"] --> Build["./m build"]
+  Build --> Test["./m test"]
+  Test --> Review["./m review"]
+  Plan --> Benchmark["./m benchmark"]
+  Plan --> Doctor["./m doctor"]
+  Plan --> Trace["./m trace"]

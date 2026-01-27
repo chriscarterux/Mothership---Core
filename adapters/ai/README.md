@@ -18,16 +18,16 @@ Mothership works with **any AI coding assistant** that can:
 
 ### Auto-detect (Recommended)
 ```bash
-./mothership.sh build 20
+./m build 20
 ```
 Mothership will auto-detect the first available AI tool in order: claude → gemini → codex → opencode
 
 ### Specify Tool
 ```bash
-AI_TOOL=gemini ./mothership.sh build 20
-AI_TOOL=claude ./mothership.sh plan "user auth"
-AI_TOOL=codex ./mothership.sh test
-AI_TOOL=opencode ./mothership.sh review
+AI_TOOL=gemini ./m build 20
+AI_TOOL=claude ./m plan "user auth"
+AI_TOOL=codex ./m test
+AI_TOOL=opencode ./m review
 ```
 
 ### Custom Tool
@@ -35,7 +35,7 @@ AI_TOOL=opencode ./mothership.sh review
 CUSTOM_AI_CMD=my-ai-cli \
 CUSTOM_PROMPT_FLAG=--prompt \
 AI_TOOL=custom \
-./mothership.sh build 20
+./m build 20
 ```
 
 ## Tool-Specific Setup
@@ -60,7 +60,7 @@ claude "Read .mothership/mothership.md and run: build"
 gcloud components install gemini
 
 # Usage
-AI_TOOL=gemini ./mothership.sh build
+AI_TOOL=gemini ./m build
 ```
 
 ### Codex (OpenAI)
@@ -69,7 +69,7 @@ AI_TOOL=gemini ./mothership.sh build
 pip install openai
 
 # Usage
-AI_TOOL=codex ./mothership.sh build
+AI_TOOL=codex ./m build
 ```
 
 ### OpenCode
@@ -78,7 +78,7 @@ AI_TOOL=codex ./mothership.sh build
 # See https://opencode.ai for installation
 
 # Usage
-AI_TOOL=opencode ./mothership.sh build
+AI_TOOL=opencode ./m build
 ```
 
 ## Adding a New AI Tool
@@ -108,7 +108,7 @@ case "$tool" in
 esac
 ```
 
-### 3. Update mothership.sh
+### 3. Update m script
 
 Add detection in the elif chain:
 ```bash
@@ -153,4 +153,4 @@ Examples:
 <mothership>VERIFIED:STORY-001</mothership>
 ```
 
-The `mothership.sh` loop detects these signals using regex - works regardless of which AI produces the output.
+The Mothership loop detects these signals using regex - works regardless of which AI produces the output.

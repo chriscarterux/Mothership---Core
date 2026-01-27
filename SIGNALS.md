@@ -89,7 +89,7 @@ When using the default `mothership.md`, signals use the `<mothership>` tag:
 
 ## Signal Detection
 
-The `mothership.sh` loop detects signals in the `<agent>SIGNAL</agent>` format:
+The Mothership loop (`./m`) detects signals in the `<agent>SIGNAL</agent>` format:
 
 ```bash
 # Build mode continues on BUILT:*, stops on:
@@ -160,18 +160,18 @@ When running modes manually without the loop:
 
 ```bash
 # Full workflow
-./mothership.sh onboard
-./mothership.sh inventory
-./mothership.sh plan "user authentication"
-./mothership.sh build 20        # Loops until BUILD-COMPLETE
-./mothership.sh quick-check
-./mothership.sh verify
-./mothership.sh test-matrix
-./mothership.sh test-contracts
-./mothership.sh test 20         # Loops until TEST-COMPLETE
-./mothership.sh review
-./mothership.sh verify-env
-./mothership.sh test-rollback
+./m onboard
+./m inventory
+./m plan "user authentication"
+./m build 20        # Loops until BUILD-COMPLETE
+./m quick-check
+./m verify
+./m test-matrix
+./m test-contracts
+./m test 20         # Loops until TEST-COMPLETE
+./m review
+./m verify-env
+./m test-rollback
 # deploy (manual or CI/CD)
-./mothership.sh health-check
+./m health-check
 ```

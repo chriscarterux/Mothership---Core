@@ -1,5 +1,5 @@
 #!/bin/bash
-# Mothership Core Loop - Iterative build/test/plan automation
+# Mothership Loop - Iterative build/test/plan automation
 # Works with any AI CLI tool (claude, cursor, aider, openai, etc.)
 
 set -e
@@ -67,7 +67,7 @@ case "$MODE" in
     benchmark)
         echo ""
         echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
-        echo -e "${BLUE}  🛸 Mothership Core Benchmark${NC}"
+        echo -e "${BLUE}  🛸 Mothership Benchmark${NC}"
         echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
         echo ""
 
@@ -107,7 +107,7 @@ case "$MODE" in
     doctor)
         echo ""
         echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
-        echo -e "${BLUE}  🛸 Mothership Core Doctor${NC}"
+        echo -e "${BLUE}  🛸 Mothership Doctor${NC}"
         echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
         echo ""
 
@@ -187,7 +187,7 @@ case "$MODE" in
     trace)
         echo ""
         echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
-        echo -e "${BLUE}  🛸 Mothership Core Trace${NC}"
+        echo -e "${BLUE}  🛸 Mothership Trace${NC}"
         echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
         echo ""
 
@@ -231,7 +231,7 @@ case "$MODE" in
         ;;
 
     -h|--help|help)
-        echo "Usage: ./mothership.sh [mode] [max_iterations]"
+        echo "Usage: ./m [mode] [max_iterations]"
         echo ""
         echo "Development Modes:"
         echo "  plan [feature]  Create stories from feature description"
@@ -261,11 +261,11 @@ case "$MODE" in
         echo "  trace [mode]    Show what gets loaded for a mode"
         echo ""
         echo "Examples:"
-        echo "  ./mothership.sh plan \"user authentication\""
-        echo "  ./mothership.sh build 20"
-        echo "  ./mothership.sh quick-check"
-        echo "  ./mothership.sh verify-env"
-        echo "  ./mothership.sh benchmark"
+        echo "  ./m plan \"user authentication\""
+        echo "  ./m build 20"
+        echo "  ./m quick-check"
+        echo "  ./m verify-env"
+        echo "  ./m benchmark"
         echo ""
         echo "Workflow:"
         echo "  onboard → inventory → plan → build → quick-check → verify →"
@@ -274,7 +274,7 @@ case "$MODE" in
         echo ""
         echo "Environment:"
         echo "  AI_TOOL    Override AI CLI detection (default: auto-detect)"
-        echo "             Example: AI_TOOL=claude ./mothership.sh build"
+        echo "             Example: AI_TOOL=claude ./m build"
         exit 0
         ;;
     *)
@@ -285,7 +285,7 @@ Verification:   quick-check, verify, test-matrix, test-contracts, test-rollback
 Infrastructure: verify-env, health-check, inventory
 Utility:        status, onboard
 
-Run './mothership.sh --help' for full usage"
+Run './m --help' for full usage"
         ;;
 esac
 
@@ -293,8 +293,8 @@ esac
 if [[ ! -d ".mothership" ]]; then
     error "No .mothership/ directory found
 
-To set up Mothership Core, run:
-  curl -fsSL https://raw.githubusercontent.com/chriscarterux/Mothership---Core/main/install.sh | bash
+To set up Mothership, run:
+  curl -fsSL https://raw.githubusercontent.com/chriscarterux/Mothership/main/install.sh | bash
 
 Or manually create .mothership/ with mothership.md"
 fi
@@ -304,7 +304,7 @@ if [[ ! -f ".mothership/mothership.md" ]]; then
     error "No .mothership/mothership.md found
 
 Run the installer to set up:
-  curl -fsSL https://raw.githubusercontent.com/chriscarterux/Mothership---Core/main/install.sh | bash"
+  curl -fsSL https://raw.githubusercontent.com/chriscarterux/Mothership/main/install.sh | bash"
 fi
 
 # Detect AI tool (set AI_TOOL env var or auto-detect)
@@ -337,7 +337,7 @@ Supported tools:
   • opencode - OpenCode CLI
 
 Or set AI_TOOL environment variable:
-  AI_TOOL=my-ai-cli ./mothership.sh build"
+  AI_TOOL=my-ai-cli ./m build"
 fi
 
 # Detect if specialized agents are installed
@@ -395,7 +395,7 @@ esac
 # Header
 echo ""
 echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}  🛸 Mothership Core Loop${NC}"
+echo -e "${BLUE}  🛸 Mothership Loop${NC}"
 echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
 echo ""
 echo -e "  Mode:       ${CYAN}$MODE${NC}"
@@ -449,7 +449,7 @@ for ((i=1; i<=MAX_ITERATIONS; i++)); do
     #              pulse (health-check)
     if echo "$OUTPUT" | grep -qE "<(mothership|vector|cortex|cipher|sentinel|atomic|sanity|nexus|phoenix|scanner|pulse)>($COMPLETE_SIGNALS)</"; then
         echo ""
-        success "Mothership Core complete! Finished at iteration $i."
+        success "Mothership complete! Finished at iteration $i."
         echo "$(date '+%Y-%m-%d %H:%M:%S') - Completed at iteration $i" >> .mothership/progress.md
         exit 0
     fi
@@ -473,7 +473,7 @@ warn "Reached max iterations ($MAX_ITERATIONS)"
 echo ""
 echo "Next steps:"
 echo "  1. Check .mothership/progress.md for status"
-echo "  2. Run again with more iterations: ./mothership.sh $MODE $((MAX_ITERATIONS * 2))"
+echo "  2. Run again with more iterations: ./m $MODE $((MAX_ITERATIONS * 2))"
 echo "  3. Check .mothership/checkpoint.md for current state"
 echo ""
 echo "$(date '+%Y-%m-%d %H:%M:%S') - Reached max iterations" >> .mothership/progress.md

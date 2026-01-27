@@ -1,4 +1,4 @@
-name: 'Mothership Core'
+name: 'Mothership'
 description: 'AI agents that build your features'
 branding:
   icon: 'zap'
@@ -25,14 +25,14 @@ runs:
   steps:
     - run: |
         VERSION="${{ inputs.version }}"
-        # Download mothership.sh if not present
-        if [ ! -f mothership.sh ]; then
-          curl -fsSL "https://raw.githubusercontent.com/chriscarterux/Mothership---Core/${VERSION}/mothership.sh" -o mothership.sh
-          chmod +x mothership.sh
+        # Download m if not present
+        if [ ! -f m ]; then
+          curl -fsSL "https://raw.githubusercontent.com/chriscarterux/Mothership/${VERSION}/m" -o m
+          chmod +x m
         fi
-        # Only set AI_TOOL if not "auto" - let mothership.sh auto-detect
+        # Only set AI_TOOL if not "auto" - let Mothership auto-detect
         if [ "${{ inputs.ai-tool }}" != "auto" ]; then
           export AI_TOOL="${{ inputs.ai-tool }}"
         fi
-        ./mothership.sh ${{ inputs.mode }} ${{ inputs.max-iterations }}
+        ./m ${{ inputs.mode }} ${{ inputs.max-iterations }}
       shell: bash

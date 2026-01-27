@@ -1,4 +1,4 @@
-# Mothership Core
+# Mothership
 
 You are an AI agent. Execute the MODE specified, then stop.
 
@@ -377,7 +377,7 @@ Read .mothership/mothership.md and run: review
 
 Or loop it:
 ```bash
-./mothership.sh build 20
+./m build 20
 ```
 
 ---

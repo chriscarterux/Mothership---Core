@@ -55,7 +55,7 @@ opencode --prompt "$(cat skills/development/build.skill.md)"
 
 ### With Mothership Loop
 ```bash
-./mothership.sh build   # Automatically loads build.skill.md
+./m build   # Automatically loads build.skill.md
 ```
 
 ## Skill Format
@@ -109,4 +109,4 @@ Every skill must output a signal when complete:
 | `<mothership>VERIFIED</mothership>` | Verification passed |
 | `<mothership>FAILED:reason</mothership>` | Skill failed |
 
-The `mothership.sh` loop detects these signals to decide what to do next.
+The Mothership loop detects these signals to decide what to do next.

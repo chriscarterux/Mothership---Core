@@ -1,6 +1,6 @@
 #!/bin/bash
-# Mothership Core Installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/chriscarterux/Mothership---Core/main/install.sh | bash
+# Mothership Installer
+# Usage: curl -fsSL https://raw.githubusercontent.com/chriscarterux/Mothership/main/install.sh | bash
 
 set -e
 
@@ -36,7 +36,7 @@ verify_checksum() {
 VERSION="${MOTHERSHIP_VERSION:-main}"
 
 echo ""
-echo "Mothership Core Installer"
+echo "Mothership Installer"
 echo ""
 
 # Detect if we're in a git repo
@@ -61,7 +61,7 @@ esac
 mkdir -p .mothership
 
 # Download files
-BASE_URL="https://raw.githubusercontent.com/chriscarterux/Mothership---Core/$VERSION"
+BASE_URL="https://raw.githubusercontent.com/chriscarterux/Mothership/$VERSION"
 
 # Download checksums first
 echo "Downloading checksums..."
@@ -70,7 +70,7 @@ curl -fsSL "$BASE_URL/checksums.sha256" -o /tmp/mothership-checksums.sha256 2>/d
     touch /tmp/mothership-checksums.sha256
 }
 
-echo "Downloading Mothership Core..."
+echo "Downloading Mothership..."
 curl -fsSL "$BASE_URL/mothership.md" -o .mothership/mothership.md
 EXPECTED=$(awk '$2 == "mothership.md" {print $1}' /tmp/mothership-checksums.sha256)
 verify_checksum ".mothership/mothership.md" "$EXPECTED"
@@ -86,10 +86,10 @@ if [ "$INSTALL_TYPE" == "full" ]; then
 fi
 
 # Download loop script
-curl -fsSL "$BASE_URL/mothership.sh" -o mothership.sh
-EXPECTED=$(awk '$2 == "mothership.sh" {print $1}' /tmp/mothership-checksums.sha256)
-verify_checksum "mothership.sh" "$EXPECTED"
-chmod +x mothership.sh
+curl -fsSL "$BASE_URL/m" -o m
+EXPECTED=$(awk '$2 == "m" {print $1}' /tmp/mothership-checksums.sha256)
+verify_checksum "m" "$EXPECTED"
+chmod +x m
 
 # Cleanup
 rm -f /tmp/mothership-checksums.sha256
@@ -106,11 +106,11 @@ EOF
 if [ -f .gitignore ]; then
     if ! grep -q ".mothership/progress.md" .gitignore; then
         echo "" >> .gitignore
-        echo "# Mothership Core" >> .gitignore
+        echo "# Mothership" >> .gitignore
         echo ".mothership/progress.md" >> .gitignore
     fi
 else
-    echo "# Mothership Core" > .gitignore
+    echo "# Mothership" > .gitignore
     echo ".mothership/progress.md" >> .gitignore
 fi
 
@@ -119,11 +119,11 @@ echo "Installation complete!"
 echo ""
 echo "Created:"
 echo "  .mothership/         - Configuration"
-echo "  mothership.sh        - Loop script"
+echo "  m                    - Loop script"
 echo ""
 echo "Next steps:"
-echo "  1. Run: ./mothership.sh doctor"
-echo "  2. Run: ./mothership.sh benchmark"
+echo "  1. Run: ./m doctor"
+echo "  2. Run: ./m benchmark"
 echo "  3. Add docs to ./docs/ describing your feature"
-echo "  4. Run: ./mothership.sh plan \"your feature\""
+echo "  4. Run: ./m plan \"your feature\""
 echo ""

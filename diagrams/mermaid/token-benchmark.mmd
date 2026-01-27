@@ -1,0 +1,4 @@
+flowchart LR
+  Run["./m benchmark"] --> Count["Token counts"]
+  Count --> Report["Cost per run"]
+  Report --> Verify["Verify efficiency claims"]

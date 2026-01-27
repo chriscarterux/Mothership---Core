@@ -1,6 +1,6 @@
-# Todo App - Built by Mothership Core
+# Todo App - Built by Mothership
 
-A complete todo application built entirely by Mothership Core agents.
+A complete todo application built entirely by Mothership agents.
 
 ## Results
 
@@ -17,7 +17,7 @@ A complete todo application built entirely by Mothership Core agents.
 ## Token Breakdown
 
 ```
-$ ./mothership.sh benchmark
+$ ./m benchmark
 .mothership/mothership.md         898 tokens
 .mothership/checkpoint.md          32 tokens
 .mothership/codebase.md           156 tokens
@@ -53,16 +53,16 @@ TOTAL PER RUN                   1,086 tokens
 | Approach | Time | Cost |
 |----------|------|------|
 | Manual development | ~2-4 hours | $0 (your time) |
-| Mothership Core | ~8 minutes | $0.05 |
+| Mothership | ~8 minutes | $0.05 |
 | ChatGPT (copy-paste) | ~30 mins | ~$0.02 |
 
-Mothership Core wins on **consistency**: same patterns, tested code, documented.
+Mothership wins on **consistency**: same patterns, tested code, documented.
 
 ## Run It Yourself
 
 ```bash
 cd examples/todo-app
-../../mothership.sh doctor
-../../mothership.sh plan "todo app with localStorage"
-../../mothership.sh build 15
+../../m doctor
+../../m plan "todo app with localStorage"
+../../m build 15
 ```

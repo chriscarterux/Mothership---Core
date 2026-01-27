@@ -1,6 +1,6 @@
 # Example: Camino Journaling App
 
-This example shows Mothership Core building a feature for a journaling/personal development app.
+This example shows Mothership building a feature for a journaling/personal development app.
 
 ## The Project
 
@@ -25,19 +25,19 @@ The user should be able to:
 cd example
 
 # Verify setup
-../mothership.sh doctor
+../m doctor
 
 # Check token usage
-../mothership.sh benchmark
+../m benchmark
 
 # Plan the feature
 "Read .mothership/mothership.md and run: plan user onboarding flow"
 
 # Build stories one at a time (loops until done)
-../mothership.sh build 10
+../m build 10
 
 # Test
-../mothership.sh test 10
+../m test 10
 
 # Review
 "Read .mothership/mothership.md and run: review"
