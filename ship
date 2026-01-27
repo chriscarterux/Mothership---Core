@@ -1,0 +1,259 @@
+#!/bin/bash
+# ship - Structured flow, minimal tokens
+# The script enforces structure. The prompts stay tiny.
+set -e
+
+SHIP_DIR=".ship"
+mkdir -p "$SHIP_DIR"
+
+# Files that enforce the flow
+PRD="$SHIP_DIR/1-prd.md"
+SPECS="$SHIP_DIR/2-specs.md"
+STORIES="$SHIP_DIR/3-stories.md"
+CURRENT="$SHIP_DIR/current.txt"
+
+# Colors
+R='\033[0;31m' G='\033[0;32m' Y='\033[0;33m' B='\033[0;34m' C='\033[0;36m' N='\033[0m'
+
+# Detect AI
+AI=$(command -v claude || command -v gemini || command -v codex || command -v opencode || echo "")
+[[ -z "$AI" ]] && echo -e "${R}No AI found${N}" && exit 1
+AI=$(basename "$AI")
+
+# Determine phase based on what exists
+phase() {
+    # Uncommitted changes take priority
+    [[ -n $(git status --porcelain 2>/dev/null) ]] && echo "commit" && return
+
+    # No PRD → need idea
+    [[ ! -f "$PRD" ]] && echo "idea" && return
+
+    # PRD but no specs → create specs
+    [[ ! -f "$SPECS" ]] && echo "specs" && return
+
+    # Specs but no stories → create stories
+    [[ ! -f "$STORIES" ]] && echo "stories" && return
+
+    # Stories exist, check for uncompleted
+    if grep -q "^\- \[ \]" "$STORIES" 2>/dev/null; then
+        echo "build"
+        return
+    fi
+
+    # All stories done → review
+    echo "review"
+}
+
+# Agent for each phase
+agent() {
+    case "$1" in
+        idea)    echo "architect" ;;
+        specs)   echo "vector" ;;
+        stories) echo "vector" ;;
+        build)   echo "cipher" ;;
+        test)    echo "cortex" ;;
+        review)  echo "sentinel" ;;
+        commit)  echo "cipher" ;;
+    esac
+}
+
+# Signal for completion
+signal() {
+    local a=$(agent "$1")
+    case "$1" in
+        idea)    echo "<$a>PRD_COMPLETE</$a>" ;;
+        specs)   echo "<$a>SPECS_COMPLETE</$a>" ;;
+        stories) echo "<$a>PLANNED:\$(grep -c '^\- \[ \]' $STORIES)</$a>" ;;
+        build)   echo "<$a>BUILT:ID</$a> or <$a>BUILD_COMPLETE</$a>" ;;
+        test)    echo "<$a>TESTED</$a>" ;;
+        review)  echo "<$a>APPROVED</$a> or <$a>NEEDS_WORK:reason</$a>" ;;
+        commit)  echo "<$a>COMMITTED</$a>" ;;
+    esac
+}
+
+# Minimal prompts that reference the structure
+prompt() {
+    case "$1" in
+        idea)
+            cat << 'EOF'
+Create a PRD in .ship/1-prd.md with:
+- Problem statement
+- Success criteria (measurable)
+- Scope (in/out)
+- Technical constraints
+Signal when done.
+EOF
+            ;;
+        specs)
+            cat << EOF
+Read: $PRD
+Create: $SPECS with:
+- Architecture decisions
+- API contracts (endpoints, request/response)
+- Database schema (tables, fields, relations)
+- Component tree (UI hierarchy)
+Each spec must be testable.
+Signal when done.
+EOF
+            ;;
+        stories)
+            cat << EOF
+Read: $PRD, $SPECS
+Create: $STORIES with atomic stories. Format:
+- [ ] [TYPE] Title
+  AC: specific, verifiable acceptance criteria
+  Verify: how to test it works
+
+Types: ui, api, database, integration, fullstack
+Order: database → api → ui (dependencies first)
+Signal with count.
+EOF
+            ;;
+        build)
+            local next=$(grep -m1 "^\- \[ \]" "$STORIES" 2>/dev/null || echo "none")
+            local type=$(echo "$next" | grep -oP '\[TYPE\]|\[ui\]|\[api\]|\[database\]|\[integration\]|\[fullstack\]' | tr -d '[]' || echo "unknown")
+            cat << EOF
+Next story: $next
+
+1. Implement it fully
+2. Run verification for type=$type:
+   - ui: check onClick/onChange handlers are wired
+   - api: test endpoint returns expected response
+   - database: verify table exists and is writable
+   - integration: test external service connection
+3. Mark [x] in $STORIES
+4. Commit with descriptive message
+Signal BUILT:ID or BUILD_COMPLETE if none left.
+EOF
+            ;;
+        test)
+            cat << EOF
+Run full test suite. Fix any failures.
+Check for gaps:
+- Untested code paths
+- Missing error handling
+- Edge cases
+Signal when all tests pass.
+EOF
+            ;;
+        review)
+            cat << EOF
+Final review of: $PRD, $SPECS, $STORIES
+Check:
+- All AC met?
+- Security issues?
+- Performance concerns?
+- Missing edge cases?
+- Buttons/handlers wired?
+- API endpoints responding?
+- Database tables created?
+Signal APPROVED or NEEDS_WORK:reason
+EOF
+            ;;
+        commit)
+            cat << EOF
+Uncommitted changes detected.
+1. Review what changed
+2. Run tests
+3. Commit if good, fix if not
+Signal when committed.
+EOF
+            ;;
+    esac
+}
+
+# Run AI
+run_ai() {
+    local p="$1"
+    case "$AI" in
+        claude)   claude --print -p "$p" ;;
+        gemini)   gemini "$p" ;;
+        codex)    codex "$p" ;;
+        opencode) opencode "$p" ;;
+    esac
+}
+
+# Show status
+status() {
+    echo -e "${C}┌─────────────────────────────────────────┐${N}"
+    echo -e "${C}│${N}  ${B}ship${N} - Structured Development Flow     ${C}│${N}"
+    echo -e "${C}├─────────────────────────────────────────┤${N}"
+
+    # Show what exists
+    [[ -f "$PRD" ]] && echo -e "${C}│${N}  ${G}✓${N} PRD        $PRD" || echo -e "${C}│${N}  ${Y}○${N} PRD        (pending)"
+    [[ -f "$SPECS" ]] && echo -e "${C}│${N}  ${G}✓${N} Specs      $SPECS" || echo -e "${C}│${N}  ${Y}○${N} Specs      (pending)"
+
+    if [[ -f "$STORIES" ]]; then
+        local done=$(grep -c "^\- \[x\]" "$STORIES" 2>/dev/null || echo 0)
+        local todo=$(grep -c "^\- \[ \]" "$STORIES" 2>/dev/null || echo 0)
+        echo -e "${C}│${N}  ${G}✓${N} Stories    $done done, $todo todo"
+    else
+        echo -e "${C}│${N}  ${Y}○${N} Stories    (pending)"
+    fi
+
+    echo -e "${C}├─────────────────────────────────────────┤${N}"
+    echo -e "${C}│${N}  AI: ${G}$AI${N}  Phase: ${B}$(phase)${N}"
+    echo -e "${C}│${N}  Agent: ${Y}$(agent $(phase))${N}"
+    echo -e "${C}└─────────────────────────────────────────┘${N}"
+}
+
+# Main
+main() {
+    local p=$(phase)
+    local a=$(agent "$p")
+    local goal="$*"
+
+    status
+    echo ""
+
+    # Build prompt
+    local pr=$(prompt "$p")
+
+    # Add goal context if provided
+    [[ -n "$goal" ]] && pr="Goal: $goal
+
+$pr"
+
+    # Add signal instruction
+    pr="$pr
+
+When complete, emit: $(signal $p)"
+
+    echo -e "${G}▶ Phase: $p${N} (agent: $a)"
+    echo ""
+
+    run_ai "$pr"
+}
+
+# Handle commands
+case "${1:-}" in
+    -h|--help|help)
+        echo -e "${B}ship${N} - Structured Development Flow"
+        echo ""
+        echo "Usage:"
+        echo "  ./ship              Auto-detect phase, run it"
+        echo "  ./ship [goal]       Start with a goal"
+        echo "  ./ship status       Show current state"
+        echo "  ./ship reset        Clear all state"
+        echo ""
+        echo "Flow:"
+        echo "  1. idea    → architect creates PRD"
+        echo "  2. specs   → vector creates technical specs"
+        echo "  3. stories → vector creates atomic stories"
+        echo "  4. build   → cipher implements each story"
+        echo "  5. test    → cortex runs tests"
+        echo "  6. review  → sentinel final check"
+        echo ""
+        echo "State stored in: .ship/"
+        ;;
+    status)
+        status
+        ;;
+    reset)
+        rm -rf "$SHIP_DIR"
+        echo -e "${G}Reset complete${N}"
+        ;;
+    *)
+        main "$@"
+        ;;
+esac
