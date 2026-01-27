@@ -1,4 +1,4 @@
-phase: build
-project: Premium Website Redesign
-branch: feat/premium-website-redesign
-story: WEB-001
+phase: complete
+project: GitHub Pages Polish & Accessibility
+branch: feat/accessibility-polish
+story: A11Y-010

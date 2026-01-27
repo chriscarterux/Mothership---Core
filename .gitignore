@@ -15,3 +15,7 @@ Thumbs.db
 # - history/ (logs)
 # - .intro_shown (flag)
 # But in THIS repo, we don't have those files
+
+# Local tooling
+vendor/excalidraw/
+tools/diagram-export/node_modules/
