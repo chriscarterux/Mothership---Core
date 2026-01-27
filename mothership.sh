@@ -306,6 +306,7 @@ Run the installer to set up:
 fi
 
 # Detect AI tool (set AI_TOOL env var or auto-detect)
+# Supports: claude, amp, aider, cursor, codex, gemini, cody, continue, opencode
 if [[ -n "$AI_TOOL" ]]; then
     AI_CMD="$AI_TOOL"
     if ! command -v "$AI_CMD" &> /dev/null; then
@@ -316,23 +317,39 @@ Either:
   2. Set AI_TOOL to a valid CLI tool
   3. Add $AI_CMD to your PATH"
     fi
-elif command -v amp &> /dev/null; then
-    AI_CMD="amp"
 elif command -v claude &> /dev/null; then
     AI_CMD="claude"
+elif command -v amp &> /dev/null; then
+    AI_CMD="amp"
+elif command -v aider &> /dev/null; then
+    AI_CMD="aider"
 elif command -v cursor &> /dev/null; then
     AI_CMD="cursor"
+elif command -v codex &> /dev/null; then
+    AI_CMD="codex"
+elif command -v gemini &> /dev/null; then
+    AI_CMD="gemini"
+elif command -v cody &> /dev/null; then
+    AI_CMD="cody"
+elif command -v opencode &> /dev/null; then
+    AI_CMD="opencode"
 else
     error "No AI CLI tool found
 
-Install one of:
-  • amp     - https://ampcode.com (recommended)
-  • claude  - https://claude.ai/code
-  • cursor  - https://cursor.sh
-  • aider   - https://aider.chat
+Supported tools:
+  • claude   - npm i -g @anthropic-ai/claude-code
+  • amp      - npm i -g @anthropic-ai/amp
+  • aider    - pip install aider-chat
+  • cursor   - https://cursor.sh
+  • codex    - OpenAI CLI
+  • gemini   - Google Cloud CLI
+  • cody     - Sourcegraph CLI
+  • opencode - https://opencode.ai
 
 Or set AI_TOOL environment variable:
-  AI_TOOL=my-ai-cli ./mothership.sh build"
+  AI_TOOL=my-ai-cli ./mothership.sh build
+
+See adapters/ai/README.md for adding custom tools."
 fi
 
 # Detect if specialized agents are installed
