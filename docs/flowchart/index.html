@@ -46,6 +46,17 @@
             font-style: italic;
         }
 
+        /* Galaxy Canvas Background */
+        #starfield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
         /* Glow */
         .glow-bg {
             position: fixed;
@@ -100,6 +111,50 @@
             justify-content: center;
             font-weight: 700;
             color: var(--bg);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text);
+            background: var(--bg-card);
+        }
+
+        .nav-links a.nav-active {
+            color: var(--text);
+            background: var(--bg-card);
+        }
+
+        .nav-cta {
+            background: var(--text-bright) !important;
+            color: var(--bg) !important;
+            padding: 8px 20px !important;
+            border-radius: 36px !important;
+            font-weight: 600 !important;
+        }
+
+        .nav-cta:hover {
+            opacity: 0.9;
+            background: var(--text-bright) !important;
+        }
+
+        .mobile-only {
+            display: none;
         }
 
         .status {
@@ -464,14 +519,23 @@
 
         /* Footer */
         footer {
-            padding: 48px 40px;
+            padding: 48px 0;
             border-top: 1px solid var(--border);
             margin-top: 80px;
         }
 
+        .footer-inner {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         .footer-links {
             display: flex;
-            justify-content: center;
+            align-items: center;
             gap: 32px;
         }
 
@@ -492,22 +556,44 @@
         .footer-links svg {
             width: 16px;
             height: 16px;
+            flex-shrink: 0;
+        }
+
+        .footer-credit {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .footer-credit a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .footer-credit a:hover {
+            color: var(--accent);
         }
 
         @media (max-width: 810px) {
             main { padding: 140px 20px 60px; }
             .nav-inner { padding: 0 20px; }
+            .nav-links { display: none; }
+            .mobile-only { display: flex; }
             .panel-content { grid-template-columns: 1fr; gap: 24px; }
             .connector { display: none; }
             .flowchart { gap: 8px; }
             .step { padding: 12px; }
             .step-icon { width: 64px; height: 64px; }
             .step-icon svg { width: 26px; height: 26px; }
+            .footer-inner { flex-direction: column; gap: 24px; text-align: center; padding: 0 20px; }
             .footer-links { flex-wrap: wrap; justify-content: center; gap: 20px; }
         }
     </style>
 </head>
 <body>
+    <!-- Galaxy starfield canvas -->
+    <canvas id="starfield"></canvas>
+
     <div class="glow-bg"></div>
 
     <nav>
@@ -516,9 +602,16 @@
                 <span class="logo-mark">M</span>
                 Mothership
             </a>
-            <div class="status">
+            <ul class="nav-links">
+                <li><a href="../#workflow">Workflow</a></li>
+                <li><a href="../#features">Features</a></li>
+                <li><a href="../#benchmark">Benchmark</a></li>
+                <li><a href="./" class="nav-active">Demo</a></li>
+                <li><a href="https://github.com/chriscarterux/Mothership" class="nav-cta">GitHub</a></li>
+            </ul>
+            <div class="status mobile-only">
                 <span class="status-dot"></span>
-                Demo Mode
+                Demo
             </div>
         </div>
     </nav>
@@ -624,22 +717,205 @@
     </main>
 
     <footer>
-        <div class="footer-links">
-            <a href="https://linkedin.com/in/chriscarterux" target="_blank">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                LinkedIn
-            </a>
-            <a href="mailto:christophercarter@hey.com">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                Email
-            </a>
-            <a href="../">Home</a>
-            <a href="https://github.com/chriscarterux/Mothership">GitHub</a>
-            <a href="https://github.com/chriscarterux/Mothership#readme">Docs</a>
+        <div class="footer-inner">
+            <div class="footer-links">
+                <a href="https://linkedin.com/in/chriscarterux" target="_blank">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                    LinkedIn
+                </a>
+                <a href="mailto:christophercarter@hey.com">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                    Email
+                </a>
+                <a href="https://github.com/chriscarterux/Mothership">GitHub</a>
+                <a href="./">Demo</a>
+                <a href="https://github.com/chriscarterux/Mothership/blob/main/LICENSE">MIT License</a>
+            </div>
+            <div class="footer-credit">
+                Built on ideas from <a href="https://ghuntley.com/ralph/">Geoffrey Huntley</a> & <a href="https://github.com/snarktank/ralph">Ryan Carson</a>
+            </div>
         </div>
     </footer>
 
     <script>
+        // ========================================
+        // Galaxy Starfield with Shooting Stars
+        // ========================================
+        (function() {
+            const canvas = document.getElementById('starfield');
+            const ctx = canvas.getContext('2d');
+
+            const NUM_STARS = 400;
+            const SHOOTING_STAR_CHANCE = 0.008;
+            const ROTATION_SPEED = 0.00008;
+
+            let stars = [];
+            let shootingStars = [];
+            let animationId = null;
+            let isVisible = true;
+
+            const starColors = [
+                'rgba(255, 255, 255,',
+                'rgba(200, 220, 255,',
+                'rgba(166, 218, 255,',
+                'rgba(180, 180, 255,',
+                'rgba(220, 200, 255,',
+            ];
+
+            function initCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+
+            function initStars() {
+                stars = [];
+                const maxRadius = Math.sqrt(canvas.width ** 2 + canvas.height ** 2) / 2;
+
+                for (let i = 0; i < NUM_STARS; i++) {
+                    stars.push({
+                        angle: Math.random() * Math.PI * 2,
+                        radius: Math.random() * maxRadius,
+                        speed: (Math.random() * 0.5 + 0.5) * ROTATION_SPEED,
+                        size: Math.random() * 1.5 + 0.3,
+                        color: starColors[Math.floor(Math.random() * starColors.length)],
+                        twinkleOffset: Math.random() * Math.PI * 2,
+                        twinkleSpeed: Math.random() * 0.002 + 0.001,
+                        depth: Math.random(),
+                    });
+                }
+            }
+
+            function spawnShootingStar() {
+                const startX = Math.random() * canvas.width;
+                const startY = Math.random() * canvas.height * 0.5;
+
+                shootingStars.push({
+                    x: startX,
+                    y: startY,
+                    vx: 4 + Math.random() * 4,
+                    vy: 2 + Math.random() * 3,
+                    life: 1.0,
+                    decay: 0.012 + Math.random() * 0.008,
+                    length: 60 + Math.random() * 40,
+                    width: 1 + Math.random() * 1.5,
+                });
+            }
+
+            function updateShootingStars() {
+                shootingStars = shootingStars.filter(star => {
+                    star.x += star.vx;
+                    star.y += star.vy;
+                    star.life -= star.decay;
+                    return star.life > 0;
+                });
+            }
+
+            function drawShootingStars() {
+                shootingStars.forEach(star => {
+                    const tailX = star.x - (star.vx / Math.sqrt(star.vx ** 2 + star.vy ** 2)) * star.length;
+                    const tailY = star.y - (star.vy / Math.sqrt(star.vx ** 2 + star.vy ** 2)) * star.length;
+
+                    const gradient = ctx.createLinearGradient(star.x, star.y, tailX, tailY);
+                    gradient.addColorStop(0, `rgba(255, 255, 255, ${star.life})`);
+                    gradient.addColorStop(0.1, `rgba(200, 220, 255, ${star.life * 0.8})`);
+                    gradient.addColorStop(0.4, `rgba(166, 218, 255, ${star.life * 0.3})`);
+                    gradient.addColorStop(1, 'rgba(166, 218, 255, 0)');
+
+                    ctx.beginPath();
+                    ctx.moveTo(star.x, star.y);
+                    ctx.lineTo(tailX, tailY);
+                    ctx.strokeStyle = gradient;
+                    ctx.lineWidth = star.width;
+                    ctx.lineCap = 'round';
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.width, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${star.life})`;
+                    ctx.fill();
+                });
+            }
+
+            function animate(timestamp) {
+                if (!isVisible) {
+                    animationId = requestAnimationFrame(animate);
+                    return;
+                }
+
+                ctx.fillStyle = 'rgba(4, 7, 13, 0.15)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+
+                stars.forEach((star, i) => {
+                    star.angle += star.speed * (0.5 + star.depth * 0.5);
+
+                    const x = centerX + star.radius * Math.cos(star.angle);
+                    const y = centerY + star.radius * Math.sin(star.angle);
+
+                    const twinkle = 0.3 + Math.abs(Math.sin(timestamp * star.twinkleSpeed + star.twinkleOffset)) * 0.7;
+                    const opacity = twinkle * (0.3 + star.depth * 0.7);
+
+                    const size = star.size * (0.5 + star.depth * 0.5);
+
+                    if (star.depth > 0.6) {
+                        ctx.beginPath();
+                        ctx.arc(x, y, size * 2, 0, Math.PI * 2);
+                        ctx.fillStyle = star.color + (opacity * 0.15) + ')';
+                        ctx.fill();
+                    }
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
+                    ctx.fillStyle = star.color + opacity + ')';
+                    ctx.fill();
+                });
+
+                if (shootingStars.length < 2 && Math.random() < SHOOTING_STAR_CHANCE) {
+                    spawnShootingStar();
+                }
+                updateShootingStars();
+                drawShootingStars();
+
+                animationId = requestAnimationFrame(animate);
+            }
+
+            function handleResize() {
+                initCanvas();
+                initStars();
+            }
+
+            document.addEventListener('visibilitychange', () => {
+                isVisible = !document.hidden;
+            });
+
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            if (!prefersReducedMotion) {
+                window.addEventListener('resize', handleResize);
+                initCanvas();
+                initStars();
+                animate(0);
+            } else {
+                initCanvas();
+                initStars();
+                ctx.fillStyle = 'rgba(4, 7, 13, 1)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                stars.forEach(star => {
+                    const x = canvas.width / 2 + star.radius * Math.cos(star.angle);
+                    const y = canvas.height / 2 + star.radius * Math.sin(star.angle);
+                    ctx.beginPath();
+                    ctx.arc(x, y, star.size * 0.7, 0, Math.PI * 2);
+                    ctx.fillStyle = star.color + (0.3 + star.depth * 0.5) + ')';
+                    ctx.fill();
+                });
+            }
+        })();
+
+        // ========================================
+        // Demo Page Logic
+        // ========================================
         const icons = {
             plan: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>',
             build: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>',
