@@ -4,14 +4,27 @@ You are an AI agent. Execute the MODE specified, then stop.
 
 ## MODES
 
+### Development Modes
 **plan [feature]** → Read docs, create Linear stories with ATOMIC acceptance criteria, stop
 **build** → Implement ONE story, VERIFY WIRING, commit, stop
+**test** → Write tests for ONE completed story, stop
+**review** → Review the branch, approve or request fixes, stop
+
+### Verification Modes
 **quick-check** → Fast sanity check for common misses (unwired UI, crashed containers), stop
 **verify** → Runtime verification that code actually works, stop
 **test-matrix** → Comprehensive test coverage (Unit, Integration, API, E2E, Security, A11y), stop
-**test** → Write tests for ONE completed story, stop
-**review** → Review the branch, approve or request fixes, stop
+**test-contracts** → API contract testing between frontend/backend/services, stop
+**test-rollback** → Verify rollback procedures work before deployment, stop
+
+### Infrastructure Modes
+**verify-env** → Check env vars, services, certificates before deployment, stop
+**health-check** → Verify all integrations are working (DB, Stripe, Email, AI), stop
+**inventory** → Discover and catalog all APIs, components, integrations, stop
+
+### Utility Modes
 **status** → Report current state, stop
+**onboard** → Scan project, create codebase.md, stop
 
 ---
 
@@ -266,6 +279,16 @@ All signals MUST use the `<mothership>SIGNAL</mothership>` format.
 | `MATRIX-FAIL:[ID]:[layers]` | Test layers failed | **Stop** and fix |
 | `TESTED:[ID]` | Tested story [ID] | **Continue** to next story |
 | `TEST-COMPLETE` | No more stories to test | **Stop** the loop |
+| `CONTRACTS-VALID` | All API contracts pass | Continue |
+| `CONTRACTS-VIOLATED:[count]` | Contract violations found | **Stop** and fix |
+| `BREAKING-CHANGES:[count]` | Breaking API changes detected | **Stop** and review |
+| `ROLLBACK-VERIFIED` | Rollback procedures tested | Continue |
+| `ROLLBACK-FAILED:[component]` | Rollback test failed | **Stop** and fix |
+| `ENV-VERIFIED` | Environment properly configured | Continue |
+| `ENV-FAILED:[count]` | Environment issues found | **Stop** and fix |
+| `HEALTHY` | All integrations healthy | Continue |
+| `UNHEALTHY:[services]` | Integration failures | **Stop** and fix |
+| `INVENTORY-COMPLETE:[counts]` | Codebase inventory done | Stop (one-shot) |
 | `APPROVED` | Review passed | Stop (review is one-shot) |
 | `NEEDS-WORK:[issues]` | Changes needed | Stop (review is one-shot) |
 | `STATUS-COMPLETE` | Status reported | Stop (status is one-shot) |
@@ -281,20 +304,35 @@ All signals MUST use the `<mothership>SIGNAL</mothership>` format.
 The full workflow with ALL verification phases:
 
 ```
-plan → build → quick-check → verify → test-matrix → test → review → deploy
+┌─────────────────────────────────────────────────────────────────────────┐
+│  DEVELOPMENT FLOW                                                        │
+├─────────────────────────────────────────────────────────────────────────┤
+│  onboard → inventory → plan → build → quick-check → verify              │
+│                                  ↓                                       │
+│            test-matrix → test-contracts → test → review                 │
+│                                  ↓                                       │
+│  PRE-DEPLOY: verify-env → test-rollback → deploy → health-check         │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 Each phase MUST pass before proceeding:
 
 | Phase | What It Checks | Failure = |
 |-------|----------------|-----------|
+| onboard | Project scanned, codebase.md created | Can't proceed |
+| inventory | All APIs/components discovered | Missing test coverage |
 | plan | Stories have atomic AC with verification steps | Can't build |
 | build | Code compiles, lints, basic tests | Can't proceed |
 | quick-check | No empty handlers, containers run | Back to build |
 | verify | Runtime verification, APIs respond | Back to build |
 | test-matrix | Unit, Integration, API, E2E, Security, A11y | Back to build |
+| test-contracts | API contracts honored | Back to build |
 | test | Specific story tests pass | Back to build |
 | review | Code quality, patterns, security | Back to build |
+| verify-env | Env vars, services, certs configured | Can't deploy |
+| test-rollback | Rollback procedures work | Can't deploy |
+| deploy | Code deployed to environment | Rollback |
+| health-check | All integrations healthy | Rollback |
 
 ## CRITICAL: Story Types Must Include
 
