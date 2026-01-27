@@ -3,6 +3,7 @@
 # This is the master script that ensures nothing is broken
 
 set -e
+set -o pipefail  # Ensure pipeline failures are not masked
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -59,9 +60,14 @@ run_check() {
     fi
 }
 
-# Load env if exists
+# Load env if exists (safely handle special characters)
 if [[ -f ".env" ]]; then
-    export $(grep -v '^#' .env | xargs 2>/dev/null) || true
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        # Skip empty lines and comments
+        [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+        # Only export lines that look like VAR=value
+        [[ "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]] && export "$line"
+    done < .env
 fi
 
 echo "Running all verification checks..."
@@ -79,9 +85,11 @@ echo ""
 run_check "UI Wiring Check" "check-wiring.sh" true || true
 run_check "Build & Lint" "check-build.sh" true || {
     # Fallback if check-build.sh doesn't exist
+    # Note: set -o pipefail ensures exit codes are preserved through pipes
     echo "Running npm build..."
-    npm run build 2>&1 | tail -20
-    npm run lint 2>&1 | tail -10
+    npm run build 2>&1 | tail -20 || exit 1
+    echo "Running npm lint..."
+    npm run lint 2>&1 | tail -10 || exit 1
 }
 
 # ═══════════════════════════════════════════════════════════════
@@ -119,12 +127,13 @@ echo -e "${BLUE}╚════════════════════�
 echo ""
 
 echo "Running test suite..."
+TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
+# Note: set -o pipefail ensures npm test exit code is preserved through pipe
 if npm test 2>&1 | tail -20; then
     PASSED_CHECKS=$((PASSED_CHECKS + 1))
 else
     FAILED_CHECKS=$((FAILED_CHECKS + 1))
 fi
-TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
 
 # ═══════════════════════════════════════════════════════════════
 # SUMMARY

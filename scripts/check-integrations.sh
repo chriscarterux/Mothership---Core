@@ -17,9 +17,12 @@ echo "║     THIRD-PARTY INTEGRATION CHECK          ║"
 echo "╚════════════════════════════════════════════╝"
 echo ""
 
-# Load env vars
+# Load env vars (safely handle special characters)
 if [[ -f ".env" ]]; then
-    export $(grep -v '^#' .env | xargs)
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+        [[ "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]] && export "$line"
+    done < .env
 fi
 
 # Test an integration

@@ -1032,7 +1032,7 @@ check_local_ai() {
         echo -e "  ${G}✓${N} Ollama running at $ollama_url"
 
         # Check for models
-        local models=$(curl -s "$ollama_url/api/tags" 2>/dev/null | grep -oP '"name":"[^"]+' | cut -d'"' -f4)
+        local models=$(curl -s "$ollama_url/api/tags" 2>/dev/null | grep -Eo '"name":"[^"]+' | cut -d'"' -f4)
 
         if [[ -n "$models" ]]; then
             echo -e "  ${G}✓${N} Models available:"
@@ -1139,21 +1139,21 @@ get_agent() {
 get_signal() {
     local agent=$(get_agent "$1")
     case "$1" in
-        prd)         echo "<$agent>PRD_COMPLETE</$agent>" ;;
-        specs)       echo "<$agent>SPECS_COMPLETE</$agent>" ;;
+        prd)         echo "<$agent>PRD-COMPLETE</$agent>" ;;
+        specs)       echo "<$agent>SPECS-COMPLETE</$agent>" ;;
         stories)     echo "<$agent>PLANNED:N</$agent>" ;;
-        build)       echo "<$agent>BUILT:ID</$agent> or <$agent>BUILD_COMPLETE</$agent>" ;;
-        test)        echo "<$agent>TESTED</$agent>" ;;
-        review)      echo "<$agent>APPROVED</$agent> or <$agent>NEEDS_WORK:reason</$agent>" ;;
+        build)       echo "<$agent>BUILT:ID</$agent> or <$agent>BUILD-COMPLETE</$agent>" ;;
+        test)        echo "<$agent>TESTED:ID</$agent> or <$agent>TEST-COMPLETE</$agent>" ;;
+        review)      echo "<$agent>APPROVED</$agent> or <$agent>NEEDS-WORK</$agent>" ;;
         commit)      echo "<$agent>COMMITTED</$agent>" ;;
-        verify)      echo "<$agent>VERIFIED</$agent> or <$agent>UNWIRED:issues</$agent>" ;;
-        quick-check) echo "<$agent>QUICK_CHECK:pass</$agent>" ;;
-        test-matrix) echo "<$agent>MATRIX_PASS</$agent>" ;;
-        contracts)   echo "<$agent>CONTRACTS_VALID</$agent>" ;;
-        rollback)    echo "<$agent>ROLLBACK_VERIFIED</$agent>" ;;
-        inventory)   echo "<$agent>INVENTORY_COMPLETE</$agent>" ;;
-        health)      echo "<$agent>HEALTHY</$agent>" ;;
-        env)         echo "<$agent>ENV_VERIFIED</$agent>" ;;
+        verify)      echo "<$agent>VERIFIED:ID</$agent> or <$agent>UNWIRED:ID:issues</$agent>" ;;
+        quick-check) echo "<$agent>QUICK-CHECK:pass</$agent> or <$agent>QUICK-CHECK:fail:count</$agent>" ;;
+        test-matrix) echo "<$agent>MATRIX-PASS:ID</$agent> or <$agent>MATRIX-FAIL:ID:layers</$agent>" ;;
+        contracts)   echo "<$agent>CONTRACTS-VALID</$agent> or <$agent>CONTRACTS-VIOLATED:count</$agent>" ;;
+        rollback)    echo "<$agent>ROLLBACK-VERIFIED</$agent> or <$agent>ROLLBACK-FAILED:component</$agent>" ;;
+        inventory)   echo "<$agent>INVENTORY-COMPLETE:counts</$agent>" ;;
+        health)      echo "<$agent>HEALTHY</$agent> or <$agent>UNHEALTHY:services</$agent>" ;;
+        env)         echo "<$agent>ENV-VERIFIED</$agent> or <$agent>ENV-FAILED:count</$agent>" ;;
         *)           echo "<$agent>DONE</$agent>" ;;
     esac
 }
@@ -1255,7 +1255,7 @@ EOF
 
         build)
             local next=$(grep -m1 "^\- \[ \]" "$STORIES" 2>/dev/null || echo "")
-            local type=$(echo "$next" | grep -oP '\[(database|api|ui|integration|fullstack)\]' | tr -d '[]' || echo "fullstack")
+            local type=$(echo "$next" | grep -Eo '\[(database|api|ui|integration|fullstack)\]' | tr -d '[]' || echo "fullstack")
             cat << EOF
 Current story: $next
 
@@ -1395,7 +1395,7 @@ main() {
     # Run verification before build phase
     if [[ "$phase" == "build" ]]; then
         local next=$(grep -m1 "^\- \[ \]" "$STORIES" 2>/dev/null || echo "")
-        local type=$(echo "$next" | grep -oP '\[(database|api|ui|integration|fullstack)\]' | tr -d '[]' || echo "fullstack")
+        local type=$(echo "$next" | grep -Eo '\[(database|api|ui|integration|fullstack)\]' | tr -d '[]' || echo "fullstack")
         verify_by_type "$type"
         echo ""
     fi
