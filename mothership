@@ -673,17 +673,184 @@ check_database() {
 check_integrations() {
     echo -e "${B}Checking integrations...${N}"
     local issues=0
+    local warnings=0
 
-    # Check for API keys
-    for key in STRIPE_SECRET_KEY OPENAI_API_KEY ANTHROPIC_API_KEY RESEND_API_KEY SENDGRID_API_KEY; do
-        if grep -q "$key" .env 2>/dev/null || [[ -n "${!key:-}" ]]; then
-            echo -e "  ${G}✓${N} $key"
+    # Load .env if exists
+    [[ -f ".env" ]] && source .env 2>/dev/null
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # STRIPE (required pairs)
+    # ─────────────────────────────────────────────────────────────────────────
+    echo -e "\n${C}Stripe:${N}"
+
+    local stripe_pub="${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-${STRIPE_PUBLISHABLE_KEY:-}}"
+    local stripe_secret="${STRIPE_SECRET_KEY:-}"
+    local stripe_webhook="${STRIPE_WEBHOOK_SECRET:-}"
+
+    # Check publishable key
+    if [[ -n "$stripe_pub" ]]; then
+        if [[ "$stripe_pub" == pk_live_* ]]; then
+            echo -e "  ${G}✓${N} Publishable key (live mode)"
+        elif [[ "$stripe_pub" == pk_test_* ]]; then
+            echo -e "  ${Y}~${N} Publishable key (test mode)"
+        else
+            echo -e "  ${R}✗${N} Publishable key (invalid format)"
+            ((issues++))
         fi
-    done
+    else
+        echo -e "  ${Y}○${N} Publishable key (not set)"
+    fi
 
-    # Check Redis
+    # Check secret key - REQUIRED if publishable exists
+    if [[ -n "$stripe_secret" ]]; then
+        if [[ "$stripe_secret" == sk_live_* ]]; then
+            echo -e "  ${G}✓${N} Secret key (live mode)"
+        elif [[ "$stripe_secret" == sk_test_* ]]; then
+            echo -e "  ${Y}~${N} Secret key (test mode)"
+        else
+            echo -e "  ${R}✗${N} Secret key (invalid format - need sk_live_... or sk_test_...)"
+            ((issues++))
+        fi
+    elif [[ -n "$stripe_pub" ]]; then
+        echo -e "  ${R}✗${N} Secret key ${R}MISSING${N} - Cannot process payments without it!"
+        echo -e "      Need: sk_live_... or sk_test_..."
+        ((issues++))
+    else
+        echo -e "  ${Y}○${N} Secret key (not set)"
+    fi
+
+    # Check mode mismatch
+    if [[ "$stripe_pub" == pk_live_* && "$stripe_secret" == sk_test_* ]]; then
+        echo -e "  ${R}✗${N} MODE MISMATCH: Publishable is LIVE but Secret is TEST"
+        ((issues++))
+    elif [[ "$stripe_pub" == pk_test_* && "$stripe_secret" == sk_live_* ]]; then
+        echo -e "  ${R}✗${N} MODE MISMATCH: Publishable is TEST but Secret is LIVE"
+        ((issues++))
+    fi
+
+    # Webhook secret
+    if [[ -n "$stripe_webhook" ]]; then
+        if [[ "$stripe_webhook" == whsec_* ]]; then
+            echo -e "  ${G}✓${N} Webhook secret"
+        else
+            echo -e "  ${R}✗${N} Webhook secret (invalid format - need whsec_...)"
+            ((issues++))
+        fi
+    else
+        echo -e "  ${Y}○${N} Webhook secret (not set - webhooks won't work)"
+        ((warnings++))
+    fi
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # EMAIL (Resend or SendGrid)
+    # ─────────────────────────────────────────────────────────────────────────
+    echo -e "\n${C}Email:${N}"
+
+    local resend="${RESEND_API_KEY:-}"
+    local sendgrid="${SENDGRID_API_KEY:-}"
+
+    if [[ -n "$resend" ]]; then
+        if [[ "$resend" == re_* ]]; then
+            echo -e "  ${G}✓${N} Resend API key"
+        else
+            echo -e "  ${R}✗${N} Resend API key (invalid format - need re_...)"
+            ((issues++))
+        fi
+    elif [[ -n "$sendgrid" ]]; then
+        if [[ "$sendgrid" == SG.* ]]; then
+            echo -e "  ${G}✓${N} SendGrid API key"
+        else
+            echo -e "  ${R}✗${N} SendGrid API key (invalid format - need SG....)"
+            ((issues++))
+        fi
+    else
+        echo -e "  ${Y}○${N} No email provider configured (Resend or SendGrid)"
+        ((warnings++))
+    fi
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # AI KEYS
+    # ─────────────────────────────────────────────────────────────────────────
+    echo -e "\n${C}AI:${N}"
+
+    local anthropic="${ANTHROPIC_API_KEY:-}"
+    local openai="${OPENAI_API_KEY:-}"
+
+    if [[ -n "$anthropic" ]]; then
+        if [[ "$anthropic" == sk-ant-* ]]; then
+            echo -e "  ${G}✓${N} Anthropic API key"
+        else
+            echo -e "  ${Y}~${N} Anthropic API key (unusual format)"
+        fi
+    else
+        echo -e "  ${Y}○${N} Anthropic API key (not set)"
+    fi
+
+    if [[ -n "$openai" ]]; then
+        if [[ "$openai" == sk-* ]]; then
+            echo -e "  ${G}✓${N} OpenAI API key"
+        else
+            echo -e "  ${Y}~${N} OpenAI API key (unusual format)"
+        fi
+    else
+        echo -e "  ${Y}○${N} OpenAI API key (not set)"
+    fi
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # DATABASE
+    # ─────────────────────────────────────────────────────────────────────────
+    echo -e "\n${C}Database:${N}"
+
+    local db_url="${DATABASE_URL:-}"
+    if [[ -n "$db_url" ]]; then
+        if [[ "$db_url" == postgres://* || "$db_url" == postgresql://* ]]; then
+            echo -e "  ${G}✓${N} DATABASE_URL (PostgreSQL)"
+        elif [[ "$db_url" == mysql://* ]]; then
+            echo -e "  ${G}✓${N} DATABASE_URL (MySQL)"
+        elif [[ "$db_url" == mongodb://* || "$db_url" == mongodb+srv://* ]]; then
+            echo -e "  ${G}✓${N} DATABASE_URL (MongoDB)"
+        else
+            echo -e "  ${Y}~${N} DATABASE_URL (unknown type)"
+        fi
+    else
+        echo -e "  ${R}✗${N} DATABASE_URL ${R}MISSING${N}"
+        ((issues++))
+    fi
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # REDIS
+    # ─────────────────────────────────────────────────────────────────────────
+    echo -e "\n${C}Redis:${N}"
+
     if command -v redis-cli &>/dev/null && redis-cli ping 2>/dev/null | grep -q "PONG"; then
-        echo -e "  ${G}✓${N} Redis"
+        echo -e "  ${G}✓${N} Redis connected"
+    elif [[ -n "${REDIS_URL:-}" ]]; then
+        echo -e "  ${Y}~${N} REDIS_URL set but not connected"
+    else
+        echo -e "  ${Y}○${N} Redis not configured"
+    fi
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # SUMMARY
+    # ─────────────────────────────────────────────────────────────────────────
+    echo ""
+    if [[ $issues -gt 0 ]]; then
+        echo -e "${R}┌─────────────────────────────────────────────┐${N}"
+        echo -e "${R}│  ✗ $issues CRITICAL ISSUE(S) - BUILD BLOCKED  │${N}"
+        echo -e "${R}└─────────────────────────────────────────────┘${N}"
+        echo ""
+        echo "Fix these issues before deploying."
+        return 1
+    elif [[ $warnings -gt 0 ]]; then
+        echo -e "${Y}┌─────────────────────────────────────────────┐${N}"
+        echo -e "${Y}│  ~ $warnings WARNING(S) - Review before deploy  │${N}"
+        echo -e "${Y}└─────────────────────────────────────────────┘${N}"
+        return 0
+    else
+        echo -e "${G}┌─────────────────────────────────────────────┐${N}"
+        echo -e "${G}│  ✓ All integrations configured correctly    │${N}"
+        echo -e "${G}└─────────────────────────────────────────────┘${N}"
+        return 0
     fi
 }
 
