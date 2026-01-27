@@ -4,11 +4,27 @@ You are an AI agent. Execute the MODE specified, then stop.
 
 ## MODES
 
-**plan [feature]** → Read docs, create Linear stories, stop
-**build** → Implement ONE story, commit, stop  
+### Development Modes
+**plan [feature]** → Read docs, create Linear stories with ATOMIC acceptance criteria, stop
+**build** → Implement ONE story, VERIFY WIRING, commit, stop
 **test** → Write tests for ONE completed story, stop
 **review** → Review the branch, approve or request fixes, stop
+
+### Verification Modes
+**quick-check** → Fast sanity check for common misses (unwired UI, crashed containers), stop
+**verify** → Runtime verification that code actually works, stop
+**test-matrix** → Comprehensive test coverage (Unit, Integration, API, E2E, Security, A11y), stop
+**test-contracts** → API contract testing between frontend/backend/services, stop
+**test-rollback** → Verify rollback procedures work before deployment, stop
+
+### Infrastructure Modes
+**verify-env** → Check env vars, services, certificates before deployment, stop
+**health-check** → Verify all integrations are working (DB, Stripe, Email, AI), stop
+**inventory** → Discover and catalog all APIs, components, integrations, stop
+
+### Utility Modes
 **status** → Report current state, stop
+**onboard** → Scan project, create codebase.md, stop
 
 ---
 
@@ -68,13 +84,104 @@ Status: `ready` → `in_progress` → `done` | `blocked`
    - `commands.test`
    Default (no config): `npm run typecheck && npm run lint && npm run test`
 9. If fail → fix → repeat
-10. Commit: `[STORY-ID] [title]`
-11. Push branch
-12. Mark story "Done" in Linear
-13. Update checkpoint: `story: null`
-14. Output: `<mothership>BUILT:[STORY-ID]</mothership>`
+10. **WIRING VALIDATION (CRITICAL):**
+    - UI: Check no empty handlers (`grep -rn "onClick={}" src/`)
+    - UI: Verify handlers call real functions (not just console.log)
+    - API: Start server, test endpoint responds (not 500/404)
+    - Docker: Build image, run container, verify stays running 30s+
+    - DB: Run migration, verify schema changes applied
+11. Commit: `[STORY-ID] [title]`
+12. Push branch
+13. Mark story "Done" in Linear
+14. Update checkpoint: `story: null`
+15. Output: `<mothership>BUILT:[STORY-ID]</mothership>`
 
 **One story. Then stop.**
+
+---
+
+## MODE: quick-check
+
+Fast sanity check for the most common issues:
+
+1. **UI Wiring:**
+   ```bash
+   grep -rn "onClick={}\|onSubmit={}\|={() => {})" src/
+   ```
+   Any output = FAIL
+
+2. **Docker Runs:**
+   ```bash
+   docker build -t qc . && docker run -d --name qc-test qc
+   sleep 15 && docker ps | grep qc-test  # Should show "Up"
+   ```
+
+3. **Build Works:**
+   ```bash
+   npm run build
+   ```
+
+4. **Tests Pass:**
+   ```bash
+   npm test
+   ```
+
+Output: `<mothership>QUICK-CHECK:[pass/fail]:[count] issues</mothership>`
+
+---
+
+## MODE: verify
+
+Runtime verification that implementation actually works:
+
+1. Read checkpoint, identify story type (UI, API, Docker, DB)
+2. Run type-specific verification:
+
+**UI Stories:**
+- Start dev server
+- Component renders without error
+- Click handlers fire (check network tab)
+- Forms submit data
+- Navigation works
+
+**API Stories:**
+- Start server
+- `curl` each new endpoint
+- Verify response shape
+- Test error cases (400, 401, 404)
+
+**Docker Stories:**
+- Build image
+- Run container
+- Verify stays up 30+ seconds
+- Health check passes
+- Logs show startup complete
+
+**DB Stories:**
+- Run migration
+- Query to verify schema
+- Test rollback
+
+Output: `<mothership>VERIFIED:[story-id]</mothership>` or `<mothership>UNWIRED:[story-id]:[issues]</mothership>`
+
+---
+
+## MODE: test-matrix
+
+Comprehensive test coverage across ALL layers:
+
+| Layer | Required For | Checks |
+|-------|--------------|--------|
+| Unit | All code | Functions in isolation, edge cases |
+| Integration | Multi-component | Components work together |
+| API | Any API | Contracts, validation, auth |
+| E2E | User flows | Full journeys work |
+| Security | All code | XSS, injection, auth, secrets |
+| A11y | UI code | WCAG 2.1 AA compliance |
+
+Run each applicable layer. ALL must pass before review.
+
+Output: `<mothership>MATRIX-PASS:[story-id]</mothership>` or `<mothership>MATRIX-FAIL:[story-id]:[layers]</mothership>`
 
 ---
 
@@ -164,8 +271,24 @@ All signals MUST use the `<mothership>SIGNAL</mothership>` format.
 | `PLANNED:[count]` | Created [count] stories | Stop (plan is one-shot) |
 | `BUILT:[ID]` | Completed story [ID] | **Continue** to next story |
 | `BUILD-COMPLETE` | No more ready stories | **Stop** the loop |
+| `QUICK-CHECK:pass` | No common issues found | Continue |
+| `QUICK-CHECK:fail:[count]` | Found [count] issues | **Stop** and fix |
+| `VERIFIED:[ID]` | Runtime verification passed | Continue |
+| `UNWIRED:[ID]:[issues]` | Found unwired/broken code | **Stop** and fix |
+| `MATRIX-PASS:[ID]` | All test layers passed | Continue |
+| `MATRIX-FAIL:[ID]:[layers]` | Test layers failed | **Stop** and fix |
 | `TESTED:[ID]` | Tested story [ID] | **Continue** to next story |
 | `TEST-COMPLETE` | No more stories to test | **Stop** the loop |
+| `CONTRACTS-VALID` | All API contracts pass | Continue |
+| `CONTRACTS-VIOLATED:[count]` | Contract violations found | **Stop** and fix |
+| `BREAKING-CHANGES:[count]` | Breaking API changes detected | **Stop** and review |
+| `ROLLBACK-VERIFIED` | Rollback procedures tested | Continue |
+| `ROLLBACK-FAILED:[component]` | Rollback test failed | **Stop** and fix |
+| `ENV-VERIFIED` | Environment properly configured | Continue |
+| `ENV-FAILED:[count]` | Environment issues found | **Stop** and fix |
+| `HEALTHY` | All integrations healthy | Continue |
+| `UNHEALTHY:[services]` | Integration failures | **Stop** and fix |
+| `INVENTORY-COMPLETE:[counts]` | Codebase inventory done | Stop (one-shot) |
 | `APPROVED` | Review passed | Stop (review is one-shot) |
 | `NEEDS-WORK:[issues]` | Changes needed | Stop (review is one-shot) |
 | `STATUS-COMPLETE` | Status reported | Stop (status is one-shot) |
@@ -176,12 +299,78 @@ All signals MUST use the `<mothership>SIGNAL</mothership>` format.
 
 ---
 
+## COMPLETE WORKFLOW
+
+The full workflow with ALL verification phases:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  DEVELOPMENT FLOW                                                        │
+├─────────────────────────────────────────────────────────────────────────┤
+│  onboard → inventory → plan → build → quick-check → verify              │
+│                                  ↓                                       │
+│            test-matrix → test-contracts → test → review                 │
+│                                  ↓                                       │
+│  PRE-DEPLOY: verify-env → test-rollback → deploy → health-check         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+Each phase MUST pass before proceeding:
+
+| Phase | What It Checks | Failure = |
+|-------|----------------|-----------|
+| onboard | Project scanned, codebase.md created | Can't proceed |
+| inventory | All APIs/components discovered | Missing test coverage |
+| plan | Stories have atomic AC with verification steps | Can't build |
+| build | Code compiles, lints, basic tests | Can't proceed |
+| quick-check | No empty handlers, containers run | Back to build |
+| verify | Runtime verification, APIs respond | Back to build |
+| test-matrix | Unit, Integration, API, E2E, Security, A11y | Back to build |
+| test-contracts | API contracts honored | Back to build |
+| test | Specific story tests pass | Back to build |
+| review | Code quality, patterns, security | Back to build |
+| verify-env | Env vars, services, certs configured | Can't deploy |
+| test-rollback | Rollback procedures work | Can't deploy |
+| deploy | Code deployed to environment | Rollback |
+| health-check | All integrations healthy | Rollback |
+
+## CRITICAL: Story Types Must Include
+
+Every story MUST specify tests for ALL applicable layers:
+
+**Frontend stories MUST test:**
+- [ ] Component renders
+- [ ] Event handlers wired (onClick calls real function)
+- [ ] Forms submit to API
+- [ ] Navigation works
+- [ ] Accessibility (keyboard, screen reader)
+
+**Backend stories MUST test:**
+- [ ] Endpoint responds (not 500/404)
+- [ ] Returns expected shape
+- [ ] Validates input (400 on bad data)
+- [ ] Auth checked (401/403)
+- [ ] Database operations execute
+
+**Full-stack stories MUST test:**
+- [ ] ALL frontend checks
+- [ ] ALL backend checks
+- [ ] Integration between them works
+
+**Infrastructure stories MUST test:**
+- [ ] Container builds
+- [ ] Container runs 30+ seconds
+- [ ] Health check passes
+- [ ] Logs show startup
+
 ## USAGE
 
 ```
 Read .mothership/mothership.md and run: plan user authentication
 Read .mothership/mothership.md and run: build
-Read .mothership/mothership.md and run: build  (repeat until BUILD-COMPLETE)
+Read .mothership/mothership.md and run: quick-check
+Read .mothership/mothership.md and run: verify
+Read .mothership/mothership.md and run: test-matrix
 Read .mothership/mothership.md and run: test
 Read .mothership/mothership.md and run: review
 ```
@@ -193,4 +382,4 @@ Or loop it:
 
 ---
 
-*~150 lines. All modes. Ship it.*
+*Complete verification pipeline. Nothing ships broken.*

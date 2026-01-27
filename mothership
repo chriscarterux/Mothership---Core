@@ -1,0 +1,1473 @@
+#!/bin/bash
+# mothership - Complete system: context + structure + agents + verification
+# Usage: ./mothership [goal]   or just: ./mothership
+set -e
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONFIG
+# ─────────────────────────────────────────────────────────────────────────────
+SHIP_DIR=".mothership"
+mkdir -p "$SHIP_DIR"
+
+# Artifacts (the flow)
+PRD="$SHIP_DIR/1-prd.md"
+SPECS="$SHIP_DIR/2-specs.md"
+STORIES="$SHIP_DIR/3-stories.md"
+LOG="$SHIP_DIR/log.md"
+
+# Context files
+CONTEXT_DIR="."
+SKILLS_DIR=".mothership/skills"
+
+# Colors
+R='\033[0;31m' G='\033[0;32m' Y='\033[0;33m' B='\033[0;34m' C='\033[0;36m' N='\033[0m'
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DETECTION
+# ─────────────────────────────────────────────────────────────────────────────
+detect_ai() {
+    for cmd in claude gemini codex opencode; do
+        command -v "$cmd" &>/dev/null && echo "$cmd" && return
+    done
+}
+
+detect_stack() {
+    [[ -f "package.json" ]] && echo "node" && return
+    [[ -f "requirements.txt" || -f "pyproject.toml" ]] && echo "python" && return
+    [[ -f "go.mod" ]] && echo "go" && return
+    [[ -f "Cargo.toml" ]] && echo "rust" && return
+    [[ -f "Gemfile" ]] && echo "ruby" && return
+    [[ -f "composer.json" ]] && echo "php" && return
+    echo "unknown"
+}
+
+detect_framework() {
+    # Node frameworks
+    [[ -f "next.config.js" || -f "next.config.mjs" ]] && echo "nextjs" && return
+    [[ -f "nuxt.config.js" || -f "nuxt.config.ts" ]] && echo "nuxt" && return
+    [[ -f "svelte.config.js" ]] && echo "sveltekit" && return
+    [[ -f "astro.config.mjs" ]] && echo "astro" && return
+    [[ -f "vite.config.js" || -f "vite.config.ts" ]] && echo "vite" && return
+
+    # Python frameworks
+    [[ -d "app" ]] && grep -q "FastAPI\|fastapi" *.py 2>/dev/null && echo "fastapi" && return
+    [[ -f "manage.py" ]] && echo "django" && return
+    [[ -d "flask" ]] || grep -q "Flask" *.py 2>/dev/null && echo "flask" && return
+
+    echo "unknown"
+}
+
+detect_database() {
+    [[ -d "prisma" ]] && echo "prisma" && return
+    [[ -d "drizzle" ]] && echo "drizzle" && return
+    [[ -f "knexfile.js" ]] && echo "knex" && return
+    [[ -d "alembic" ]] && echo "sqlalchemy" && return
+    [[ -f "diesel.toml" ]] && echo "diesel" && return
+    grep -q "mongoose" package.json 2>/dev/null && echo "mongoose" && return
+    echo "unknown"
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONTEXT GENERATION (like SummonAI Kit but free)
+# ─────────────────────────────────────────────────────────────────────────────
+generate_context() {
+    local stack=$(detect_stack)
+    local framework=$(detect_framework)
+    local database=$(detect_database)
+
+    echo -e "${B}Generating context files...${N}"
+    echo -e "  Stack: ${G}$stack${N}"
+    echo -e "  Framework: ${G}$framework${N}"
+    echo -e "  Database: ${G}$database${N}"
+    echo ""
+
+    # Scan codebase
+    local src_dirs=$(find . -type d -name "src" -o -name "app" -o -name "lib" -o -name "components" 2>/dev/null | grep -v node_modules | head -5)
+    local entry_files=$(find . -maxdepth 2 -name "index.*" -o -name "main.*" -o -name "app.*" 2>/dev/null | grep -v node_modules | head -5)
+    local config_files=$(find . -maxdepth 1 -name "*.config.*" -o -name ".env*" 2>/dev/null | head -10)
+
+    # Generate CLAUDE.md
+    generate_claude_md "$stack" "$framework" "$database" "$src_dirs" "$entry_files"
+
+    # Generate other AI context files
+    generate_gemini_md "$stack" "$framework" "$database"
+    generate_codex_md "$stack" "$framework" "$database"
+    generate_opencode_md "$stack" "$framework" "$database"
+
+    # Generate AGENTS.md
+    generate_agents_md
+
+    # Generate skills
+    mkdir -p "$SKILLS_DIR"
+    generate_skills "$stack" "$framework" "$database"
+
+    echo -e "${G}✓ Context generation complete${N}"
+    echo ""
+    echo "Generated files:"
+    echo "  CLAUDE.md      - Context for Claude"
+    echo "  GEMINI.md      - Context for Gemini"
+    echo "  CODEX.md       - Context for Codex"
+    echo "  OPENCODE.md    - Context for OpenCode"
+    echo "  AGENTS.md      - Agent documentation"
+    echo "  $SKILLS_DIR/   - Stack-specific skills"
+}
+
+generate_claude_md() {
+    local stack="$1" framework="$2" database="$3" src_dirs="$4" entry_files="$5"
+
+    cat > "$CONTEXT_DIR/CLAUDE.md" << EOF
+# Project Context
+
+## Stack
+- **Language**: $stack
+- **Framework**: $framework
+- **Database**: $database
+
+## Structure
+\`\`\`
+$(find . -maxdepth 2 -type d | grep -v node_modules | grep -v .git | grep -v .mothership | head -20 | sed 's/^//')
+\`\`\`
+
+## Key Files
+$(echo "$entry_files" | sed 's/^/- /')
+
+## Commands
+\`\`\`bash
+# Development
+$(case "$stack" in
+    node) echo "npm run dev" ;;
+    python) echo "python -m uvicorn app.main:app --reload" ;;
+    go) echo "go run ." ;;
+    rust) echo "cargo run" ;;
+    *) echo "# See package.json or Makefile" ;;
+esac)
+
+# Test
+$(case "$stack" in
+    node) echo "npm test" ;;
+    python) echo "pytest" ;;
+    go) echo "go test ./..." ;;
+    rust) echo "cargo test" ;;
+    *) echo "# See package.json or Makefile" ;;
+esac)
+
+# Build
+$(case "$stack" in
+    node) echo "npm run build" ;;
+    python) echo "python -m build" ;;
+    go) echo "go build" ;;
+    rust) echo "cargo build --release" ;;
+    *) echo "# See package.json or Makefile" ;;
+esac)
+\`\`\`
+
+## Conventions
+- Use TypeScript/type hints where possible
+- Follow existing code style
+- Write tests for new features
+- Keep functions small and focused
+
+## Mothership Integration
+This project uses Mothership for autonomous development.
+
+### Workflow
+\`\`\`
+./mothership              # Auto-run next phase
+./mothership status       # Show progress
+./mothership onboard      # Regenerate this file
+\`\`\`
+
+### Agents
+| Agent | Role |
+|-------|------|
+| cipher | Planning (PRD, specs, stories) |
+| vector | Building (implement, verify) |
+| cortex | Testing (run tests, fix) |
+| sentinel | Review (security, quality) |
+
+### Signals
+Emit signals to indicate completion:
+- \`<cipher>PRD_COMPLETE</cipher>\`
+- \`<vector>BUILT:ID</vector>\`
+- \`<cortex>TESTED</cortex>\`
+- \`<sentinel>APPROVED</sentinel>\`
+EOF
+    echo -e "  ${G}✓${N} CLAUDE.md"
+}
+
+generate_gemini_md() {
+    local stack="$1" framework="$2" database="$3"
+
+    cat > "$CONTEXT_DIR/GEMINI.md" << EOF
+# Gemini Context
+
+## Project: $(basename "$(pwd)")
+Stack: $stack | Framework: $framework | DB: $database
+
+## Quick Reference
+- Run: \`$(case "$stack" in node) echo "npm run dev";; python) echo "uvicorn app.main:app";; *) echo "see package.json";; esac)\`
+- Test: \`$(case "$stack" in node) echo "npm test";; python) echo "pytest";; *) echo "see package.json";; esac)\`
+- Build: \`$(case "$stack" in node) echo "npm run build";; python) echo "python -m build";; *) echo "see package.json";; esac)\`
+
+## Mothership Workflow
+Run \`./mothership\` to auto-detect the next phase.
+Emit signals like \`<vector>BUILT:story-id</vector>\` when done.
+
+## Key Directories
+$(find . -maxdepth 1 -type d | grep -v "^\.$" | grep -v node_modules | grep -v .git | head -10 | sed 's/^/- /')
+EOF
+    echo -e "  ${G}✓${N} GEMINI.md"
+}
+
+generate_codex_md() {
+    local stack="$1" framework="$2" database="$3"
+
+    cat > "$CONTEXT_DIR/CODEX.md" << EOF
+# Codex Context
+
+Project: $(basename "$(pwd)")
+Stack: $stack / $framework / $database
+
+## Commands
+dev:   $(case "$stack" in node) echo "npm run dev";; python) echo "uvicorn app.main:app";; *) echo "check scripts";; esac)
+test:  $(case "$stack" in node) echo "npm test";; python) echo "pytest";; *) echo "check scripts";; esac)
+build: $(case "$stack" in node) echo "npm run build";; python) echo "pip install -e .";; *) echo "check scripts";; esac)
+
+## Mothership
+Auto-pilot: ./mothership
+Status: ./mothership status
+Reset: ./mothership reset
+
+## Signals (emit when done)
+Planning done: <cipher>PRD_COMPLETE</cipher>
+Built story:   <vector>BUILT:ID</vector>
+Tests pass:    <cortex>TESTED</cortex>
+Review done:   <sentinel>APPROVED</sentinel>
+EOF
+    echo -e "  ${G}✓${N} CODEX.md"
+}
+
+generate_opencode_md() {
+    local stack="$1" framework="$2" database="$3"
+
+    cat > "$CONTEXT_DIR/OPENCODE.md" << EOF
+# OpenCode Context
+
+## $(basename "$(pwd)")
+$stack | $framework | $database
+
+## Run
+\`\`\`
+$(case "$stack" in
+    node) echo "npm run dev" ;;
+    python) echo "uvicorn app.main:app --reload" ;;
+    go) echo "go run ." ;;
+    *) echo "# check package.json" ;;
+esac)
+\`\`\`
+
+## Mothership Integration
+\`\`\`bash
+./mothership           # Auto-run
+./mothership status    # Progress
+./mothership onboard   # Regenerate context
+\`\`\`
+
+## Agent Signals
+| Done With | Emit |
+|-----------|------|
+| PRD | \`<cipher>PRD_COMPLETE</cipher>\` |
+| Build | \`<vector>BUILT:id</vector>\` |
+| Test | \`<cortex>TESTED</cortex>\` |
+| Review | \`<sentinel>APPROVED</sentinel>\` |
+EOF
+    echo -e "  ${G}✓${N} OPENCODE.md"
+}
+
+generate_agents_md() {
+    cat > "$CONTEXT_DIR/AGENTS.md" << 'EOF'
+# Mothership Agents
+
+## Core Agents (Development Flow)
+
+| Agent | Phase | Role | Signal |
+|-------|-------|------|--------|
+| **cipher** | Plan | Creates PRD, specs, stories | `<cipher>PRD_COMPLETE</cipher>` |
+| **vector** | Build | Implements stories with verification | `<vector>BUILT:ID</vector>` |
+| **cortex** | Test | Runs test suite, fixes failures | `<cortex>TESTED</cortex>` |
+| **sentinel** | Review | Security, quality, completeness | `<sentinel>APPROVED</sentinel>` |
+
+## Verification Agents
+
+| Agent | Mode | Purpose | Signal |
+|-------|------|---------|--------|
+| **sanity** | quick-check | Fast build/lint check | `<sanity>QUICK_CHECK:pass</sanity>` |
+| **atomic** | verify | Runtime wiring verification | `<atomic>VERIFIED</atomic>` |
+| **nexus** | test-matrix | 8-layer test coverage | `<nexus>MATRIX_PASS</nexus>` |
+| **nexus** | contracts | API contract validation | `<nexus>CONTRACTS_VALID</nexus>` |
+| **phoenix** | rollback | Rollback testing | `<phoenix>ROLLBACK_VERIFIED</phoenix>` |
+| **scanner** | inventory | Codebase mapping | `<scanner>INVENTORY_COMPLETE</scanner>` |
+| **pulse** | health | Integration health check | `<pulse>HEALTHY</pulse>` |
+
+## Flow
+
+```
+cipher/plan → vector/build → cortex/test → sentinel/review
+     │              │              │              │
+     ▼              ▼              ▼              ▼
+   PRD.md      Implement      Run Tests      Final QA
+   Specs.md    + Verify       Fix Fails      Security
+   Stories.md  + Commit       Coverage       Approval
+```
+
+## Signal Protocol
+
+1. **Always emit a signal** when completing a phase
+2. **Format**: `<agent>SIGNAL</agent>` or `<agent>SIGNAL:data</agent>`
+3. **Loop signals**: `BUILT:ID` continues, `BUILD_COMPLETE` stops
+4. **Blocked**: `<agent>BLOCKED:reason</agent>`
+
+## Verification Types
+
+When building, verify based on story type:
+
+| Type | Check |
+|------|-------|
+| `[database]` | Table exists, migrations run, writable |
+| `[api]` | Endpoint responds, correct format |
+| `[ui]` | Component renders, handlers wired |
+| `[integration]` | External service connected |
+| `[fullstack]` | All of the above |
+EOF
+    echo -e "  ${G}✓${N} AGENTS.md"
+}
+
+generate_skills() {
+    local stack="$1" framework="$2" database="$3"
+
+    # Common skills
+    cat > "$SKILLS_DIR/plan.skill.md" << 'EOF'
+# Plan Skill
+
+## When to Use
+Creating PRD, specs, or stories for a new feature.
+
+## Steps
+1. Understand the goal
+2. Create PRD with problem, success criteria, scope
+3. Create specs with database schema, API endpoints, components
+4. Create atomic stories with TYPE, AC, and verification
+
+## Story Format
+```markdown
+- [ ] [TYPE] Title
+  AC: Specific, testable acceptance criteria
+  Verify: Command or action to verify it works
+```
+
+## Types
+- `[database]` - Schema, migrations, queries
+- `[api]` - Endpoints, request/response
+- `[ui]` - Components, handlers, state
+- `[integration]` - External services
+- `[fullstack]` - End-to-end feature
+
+## Signal
+`<cipher>PLANNED:N</cipher>` where N is story count
+EOF
+
+    cat > "$SKILLS_DIR/build.skill.md" << 'EOF'
+# Build Skill
+
+## When to Use
+Implementing a story from the backlog.
+
+## Steps
+1. Read the story and its AC
+2. Implement the feature
+3. Verify based on story TYPE:
+   - database: `psql -c "\d tablename"`
+   - api: `curl localhost:3000/api/endpoint`
+   - ui: Click/interact, check DevTools
+   - integration: Test external connection
+4. Mark story complete `[x]`
+5. Commit with `feat(type): description`
+
+## Pre-Commit Checklist
+- [ ] No empty handlers (onClick={})
+- [ ] No TODO/FIXME left behind
+- [ ] Tests pass
+- [ ] Types compile
+
+## Signal
+`<vector>BUILT:story-id</vector>` or `<vector>BUILD_COMPLETE</vector>`
+EOF
+
+    cat > "$SKILLS_DIR/test.skill.md" << 'EOF'
+# Test Skill
+
+## When to Use
+Running test suite and fixing failures.
+
+## Steps
+1. Run unit tests
+2. Run type checks
+3. Run linter
+4. Fix any failures
+5. Check coverage
+
+## Commands by Stack
+- Node: `npm test`, `npx tsc --noEmit`, `npm run lint`
+- Python: `pytest`, `mypy .`, `ruff check .`
+- Go: `go test ./...`, `go vet ./...`
+- Rust: `cargo test`, `cargo clippy`
+
+## Signal
+`<cortex>TESTED</cortex>`
+EOF
+
+    cat > "$SKILLS_DIR/review.skill.md" << 'EOF'
+# Review Skill
+
+## When to Use
+Final quality check before shipping.
+
+## Checklist
+1. [ ] PRD success criteria met?
+2. [ ] All stories completed?
+3. [ ] No empty handlers?
+4. [ ] API endpoints respond correctly?
+5. [ ] Database tables exist and writable?
+6. [ ] Environment variables documented?
+7. [ ] No hardcoded secrets?
+8. [ ] Edge cases handled?
+9. [ ] Error messages helpful?
+10. [ ] Performance acceptable?
+
+## Signal
+`<sentinel>APPROVED</sentinel>` or `<sentinel>NEEDS_WORK:reason</sentinel>`
+EOF
+
+    # Stack-specific skills
+    case "$stack" in
+        node)
+            cat > "$SKILLS_DIR/node.skill.md" << 'EOF'
+# Node.js Skill
+
+## Package Management
+```bash
+npm install <package>      # Add dependency
+npm install -D <package>   # Add dev dependency
+npm update                 # Update all
+npm audit fix             # Fix vulnerabilities
+```
+
+## Scripts
+```bash
+npm run dev       # Development server
+npm run build     # Production build
+npm test          # Run tests
+npm run lint      # Lint code
+```
+
+## Common Patterns
+- Use ESM imports: `import x from 'y'`
+- Prefer async/await over callbacks
+- Use TypeScript for type safety
+- Environment variables in `.env`
+EOF
+            ;;
+        python)
+            cat > "$SKILLS_DIR/python.skill.md" << 'EOF'
+# Python Skill
+
+## Package Management
+```bash
+pip install <package>          # Add dependency
+pip install -e .               # Install local package
+pip freeze > requirements.txt  # Lock versions
+```
+
+## Commands
+```bash
+python -m uvicorn app.main:app --reload  # Dev server
+pytest                                    # Run tests
+mypy .                                    # Type check
+ruff check .                              # Lint
+```
+
+## Common Patterns
+- Use type hints: `def func(x: str) -> int:`
+- Use dataclasses or Pydantic models
+- Use pathlib for file paths
+- Use context managers for resources
+EOF
+            ;;
+    esac
+
+    # Framework-specific skills
+    case "$framework" in
+        nextjs)
+            cat > "$SKILLS_DIR/nextjs.skill.md" << 'EOF'
+# Next.js Skill
+
+## Structure
+```
+app/              # App router pages
+  page.tsx        # Route component
+  layout.tsx      # Layout wrapper
+  loading.tsx     # Loading state
+  error.tsx       # Error boundary
+components/       # Reusable components
+lib/              # Utilities
+```
+
+## Patterns
+- Server Components by default
+- `'use client'` for interactivity
+- `use server` for server actions
+- API routes in `app/api/`
+
+## Commands
+```bash
+npm run dev       # Dev server (port 3000)
+npm run build     # Production build
+npm run start     # Start production
+```
+EOF
+            ;;
+        fastapi)
+            cat > "$SKILLS_DIR/fastapi.skill.md" << 'EOF'
+# FastAPI Skill
+
+## Structure
+```
+app/
+  main.py         # App entry, routes
+  models.py       # Pydantic models
+  database.py     # DB connection
+  routers/        # Route modules
+```
+
+## Patterns
+```python
+@app.get("/items/{id}")
+async def get_item(id: int) -> Item:
+    return await db.get(id)
+```
+
+## Commands
+```bash
+uvicorn app.main:app --reload  # Dev server
+pytest                          # Run tests
+```
+EOF
+            ;;
+    esac
+
+    # Database-specific skills
+    case "$database" in
+        prisma)
+            cat > "$SKILLS_DIR/prisma.skill.md" << 'EOF'
+# Prisma Skill
+
+## Commands
+```bash
+npx prisma generate        # Generate client
+npx prisma db push         # Push schema
+npx prisma migrate dev     # Create migration
+npx prisma studio          # Open GUI
+```
+
+## Schema
+```prisma
+model User {
+  id    Int     @id @default(autoincrement())
+  email String  @unique
+  posts Post[]
+}
+```
+
+## Usage
+```typescript
+const user = await prisma.user.create({
+  data: { email: 'test@test.com' }
+})
+```
+EOF
+            ;;
+    esac
+
+    echo -e "  ${G}✓${N} Skills generated in $SKILLS_DIR/"
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# VERIFICATION (the scripts that catch gaps)
+# ─────────────────────────────────────────────────────────────────────────────
+check_wiring() {
+    echo -e "${B}Checking wiring...${N}"
+    local issues=0
+
+    # Empty handlers
+    for pattern in 'onClick={}' 'onChange={}' 'onSubmit={}' 'onClick={() => {}}' 'onChange={() => {}}'; do
+        if grep -r "$pattern" --include="*.tsx" --include="*.jsx" --include="*.js" . 2>/dev/null | grep -v node_modules; then
+            ((issues++))
+        fi
+    done
+
+    # TODO/FIXME
+    if grep -rn "TODO\|FIXME" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" . 2>/dev/null | grep -v node_modules | head -5; then
+        ((issues++))
+    fi
+
+    [[ $issues -eq 0 ]] && echo -e "${G}✓ No wiring issues${N}" || echo -e "${Y}! Found $issues potential issues${N}"
+    return $issues
+}
+
+check_api() {
+    echo -e "${B}Checking API...${N}"
+    local stack=$(detect_stack)
+
+    case "$stack" in
+        node)
+            # Check if server responds
+            if curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/health 2>/dev/null | grep -q "200"; then
+                echo -e "${G}✓ API responding${N}"
+            else
+                echo -e "${Y}! API not responding (may not be running)${N}"
+            fi
+            ;;
+        python)
+            if curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/health 2>/dev/null | grep -q "200"; then
+                echo -e "${G}✓ API responding${N}"
+            else
+                echo -e "${Y}! API not responding${N}"
+            fi
+            ;;
+    esac
+}
+
+check_database() {
+    echo -e "${B}Checking database...${N}"
+    local issues=0
+
+    # Load .env if exists
+    [[ -f ".env" ]] && source .env 2>/dev/null
+
+    local db_url="${DATABASE_URL:-}"
+
+    # Check DATABASE_URL exists
+    if [[ -z "$db_url" ]]; then
+        if [[ -f ".env" ]] && grep -q "DATABASE_URL" .env; then
+            db_url=$(grep "DATABASE_URL" .env | cut -d'=' -f2-)
+            echo -e "  ${G}✓${N} DATABASE_URL in .env"
+        else
+            echo -e "  ${R}✗${N} DATABASE_URL ${R}MISSING${N}"
+            ((issues++))
+            return $issues
+        fi
+    else
+        echo -e "  ${G}✓${N} DATABASE_URL set"
+    fi
+
+    # Try to connect and check tables
+    if command -v psql &>/dev/null; then
+        echo -e "  ${Y}~${N} Testing connection..."
+
+        # Test connection
+        if psql "$db_url" -c "SELECT 1" &>/dev/null; then
+            echo -e "  ${G}✓${N} Database connection OK"
+
+            # Check table count
+            local table_count=$(psql "$db_url" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'" 2>/dev/null | tr -d ' ')
+
+            if [[ "$table_count" == "0" ]]; then
+                echo -e "  ${R}✗${N} Database has ${R}0 TABLES${N} - migrations not run!"
+                echo -e "      Run: npx prisma migrate deploy  OR  npx drizzle-kit migrate"
+                ((issues++))
+            else
+                echo -e "  ${G}✓${N} Database has $table_count tables"
+            fi
+        else
+            echo -e "  ${R}✗${N} Database connection ${R}FAILED${N}"
+            echo -e "      Check credentials and network access"
+            ((issues++))
+        fi
+    elif command -v docker &>/dev/null && docker ps | grep -q postgres; then
+        echo -e "  ${Y}~${N} Testing via Docker..."
+
+        local container=$(docker ps --format '{{.Names}}' | grep -i postgres | head -1)
+        if [[ -n "$container" ]]; then
+            local table_count=$(docker exec "$container" psql -U postgres -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'" 2>/dev/null | tr -d ' ')
+
+            if [[ "$table_count" == "0" ]]; then
+                echo -e "  ${R}✗${N} Database has ${R}0 TABLES${N} - migrations not run!"
+                ((issues++))
+            else
+                echo -e "  ${G}✓${N} Database has $table_count tables (via Docker)"
+            fi
+        fi
+    else
+        echo -e "  ${Y}~${N} Cannot test connection (no psql or docker)"
+    fi
+
+    # Check ORM/migrations exist
+    if [[ -d "prisma" ]]; then
+        if [[ -d "prisma/migrations" ]] && ls prisma/migrations/*/migration.sql &>/dev/null; then
+            local migration_count=$(ls -d prisma/migrations/*/ 2>/dev/null | wc -l | tr -d ' ')
+            echo -e "  ${G}✓${N} Prisma: $migration_count migrations found"
+        else
+            echo -e "  ${Y}~${N} Prisma: No migrations yet"
+        fi
+    elif [[ -d "drizzle" ]]; then
+        if ls drizzle/*.sql &>/dev/null; then
+            local migration_count=$(ls drizzle/*.sql 2>/dev/null | wc -l | tr -d ' ')
+            echo -e "  ${G}✓${N} Drizzle: $migration_count migrations found"
+        else
+            echo -e "  ${Y}~${N} Drizzle: No migrations yet"
+        fi
+    elif [[ -d "alembic" ]]; then
+        echo -e "  ${G}✓${N} Alembic detected"
+    fi
+
+    if [[ $issues -gt 0 ]]; then
+        echo ""
+        echo -e "  ${R}Database issues will cause runtime failures!${N}"
+        return 1
+    fi
+    return 0
+}
+
+check_integrations() {
+    echo -e "${B}Checking integrations...${N}"
+    local issues=0
+    local warnings=0
+
+    # Load .env if exists
+    [[ -f ".env" ]] && source .env 2>/dev/null
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # STRIPE (required pairs)
+    # ─────────────────────────────────────────────────────────────────────────
+    echo -e "\n${C}Stripe:${N}"
+
+    local stripe_pub="${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-${STRIPE_PUBLISHABLE_KEY:-}}"
+    local stripe_secret="${STRIPE_SECRET_KEY:-}"
+    local stripe_webhook="${STRIPE_WEBHOOK_SECRET:-}"
+
+    # Check publishable key
+    if [[ -n "$stripe_pub" ]]; then
+        if [[ "$stripe_pub" == pk_live_* ]]; then
+            echo -e "  ${G}✓${N} Publishable key (live mode)"
+        elif [[ "$stripe_pub" == pk_test_* ]]; then
+            echo -e "  ${Y}~${N} Publishable key (test mode)"
+        else
+            echo -e "  ${R}✗${N} Publishable key (invalid format)"
+            ((issues++))
+        fi
+    else
+        echo -e "  ${Y}○${N} Publishable key (not set)"
+    fi
+
+    # Check secret key - REQUIRED if publishable exists
+    if [[ -n "$stripe_secret" ]]; then
+        if [[ "$stripe_secret" == sk_live_* ]]; then
+            echo -e "  ${G}✓${N} Secret key (live mode)"
+        elif [[ "$stripe_secret" == sk_test_* ]]; then
+            echo -e "  ${Y}~${N} Secret key (test mode)"
+        else
+            echo -e "  ${R}✗${N} Secret key (invalid format - need sk_live_... or sk_test_...)"
+            ((issues++))
+        fi
+    elif [[ -n "$stripe_pub" ]]; then
+        echo -e "  ${R}✗${N} Secret key ${R}MISSING${N} - Cannot process payments without it!"
+        echo -e "      Need: sk_live_... or sk_test_..."
+        ((issues++))
+    else
+        echo -e "  ${Y}○${N} Secret key (not set)"
+    fi
+
+    # Check mode mismatch
+    if [[ "$stripe_pub" == pk_live_* && "$stripe_secret" == sk_test_* ]]; then
+        echo -e "  ${R}✗${N} MODE MISMATCH: Publishable is LIVE but Secret is TEST"
+        ((issues++))
+    elif [[ "$stripe_pub" == pk_test_* && "$stripe_secret" == sk_live_* ]]; then
+        echo -e "  ${R}✗${N} MODE MISMATCH: Publishable is TEST but Secret is LIVE"
+        ((issues++))
+    fi
+
+    # Webhook secret
+    if [[ -n "$stripe_webhook" ]]; then
+        if [[ "$stripe_webhook" == whsec_* ]]; then
+            echo -e "  ${G}✓${N} Webhook secret"
+        else
+            echo -e "  ${R}✗${N} Webhook secret (invalid format - need whsec_...)"
+            ((issues++))
+        fi
+    else
+        echo -e "  ${Y}○${N} Webhook secret (not set - webhooks won't work)"
+        ((warnings++))
+    fi
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # EMAIL (Resend or SendGrid)
+    # ─────────────────────────────────────────────────────────────────────────
+    echo -e "\n${C}Email:${N}"
+
+    local resend="${RESEND_API_KEY:-}"
+    local sendgrid="${SENDGRID_API_KEY:-}"
+
+    if [[ -n "$resend" ]]; then
+        if [[ "$resend" == re_* ]]; then
+            echo -e "  ${G}✓${N} Resend API key"
+        else
+            echo -e "  ${R}✗${N} Resend API key (invalid format - need re_...)"
+            ((issues++))
+        fi
+    elif [[ -n "$sendgrid" ]]; then
+        if [[ "$sendgrid" == SG.* ]]; then
+            echo -e "  ${G}✓${N} SendGrid API key"
+        else
+            echo -e "  ${R}✗${N} SendGrid API key (invalid format - need SG....)"
+            ((issues++))
+        fi
+    else
+        echo -e "  ${Y}○${N} No email provider configured (Resend or SendGrid)"
+        ((warnings++))
+    fi
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # AI KEYS
+    # ─────────────────────────────────────────────────────────────────────────
+    echo -e "\n${C}AI:${N}"
+
+    local anthropic="${ANTHROPIC_API_KEY:-}"
+    local openai="${OPENAI_API_KEY:-}"
+
+    if [[ -n "$anthropic" ]]; then
+        if [[ "$anthropic" == sk-ant-* ]]; then
+            echo -e "  ${G}✓${N} Anthropic API key"
+        else
+            echo -e "  ${Y}~${N} Anthropic API key (unusual format)"
+        fi
+    else
+        echo -e "  ${Y}○${N} Anthropic API key (not set)"
+    fi
+
+    if [[ -n "$openai" ]]; then
+        if [[ "$openai" == sk-* ]]; then
+            echo -e "  ${G}✓${N} OpenAI API key"
+        else
+            echo -e "  ${Y}~${N} OpenAI API key (unusual format)"
+        fi
+    else
+        echo -e "  ${Y}○${N} OpenAI API key (not set)"
+    fi
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # DATABASE
+    # ─────────────────────────────────────────────────────────────────────────
+    echo -e "\n${C}Database:${N}"
+
+    local db_url="${DATABASE_URL:-}"
+    if [[ -n "$db_url" ]]; then
+        if [[ "$db_url" == postgres://* || "$db_url" == postgresql://* ]]; then
+            echo -e "  ${G}✓${N} DATABASE_URL (PostgreSQL)"
+        elif [[ "$db_url" == mysql://* ]]; then
+            echo -e "  ${G}✓${N} DATABASE_URL (MySQL)"
+        elif [[ "$db_url" == mongodb://* || "$db_url" == mongodb+srv://* ]]; then
+            echo -e "  ${G}✓${N} DATABASE_URL (MongoDB)"
+        else
+            echo -e "  ${Y}~${N} DATABASE_URL (unknown type)"
+        fi
+    else
+        echo -e "  ${R}✗${N} DATABASE_URL ${R}MISSING${N}"
+        ((issues++))
+    fi
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # REDIS
+    # ─────────────────────────────────────────────────────────────────────────
+    echo -e "\n${C}Redis:${N}"
+
+    if command -v redis-cli &>/dev/null && redis-cli ping 2>/dev/null | grep -q "PONG"; then
+        echo -e "  ${G}✓${N} Redis connected"
+    elif [[ -n "${REDIS_URL:-}" ]]; then
+        echo -e "  ${Y}~${N} REDIS_URL set but not connected"
+    else
+        echo -e "  ${Y}○${N} Redis not configured"
+    fi
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # SUMMARY
+    # ─────────────────────────────────────────────────────────────────────────
+    echo ""
+    if [[ $issues -gt 0 ]]; then
+        echo -e "${R}┌─────────────────────────────────────────────┐${N}"
+        echo -e "${R}│  ✗ $issues CRITICAL ISSUE(S) - BUILD BLOCKED  │${N}"
+        echo -e "${R}└─────────────────────────────────────────────┘${N}"
+        echo ""
+        echo "Fix these issues before deploying."
+        return 1
+    elif [[ $warnings -gt 0 ]]; then
+        echo -e "${Y}┌─────────────────────────────────────────────┐${N}"
+        echo -e "${Y}│  ~ $warnings WARNING(S) - Review before deploy  │${N}"
+        echo -e "${Y}└─────────────────────────────────────────────┘${N}"
+        return 0
+    else
+        echo -e "${G}┌─────────────────────────────────────────────┐${N}"
+        echo -e "${G}│  ✓ All integrations configured correctly    │${N}"
+        echo -e "${G}└─────────────────────────────────────────────┘${N}"
+        return 0
+    fi
+}
+
+check_docker() {
+    echo -e "${B}Checking Docker containers...${N}"
+    local issues=0
+    local warnings=0
+
+    if ! command -v docker &>/dev/null; then
+        echo -e "  ${Y}○${N} Docker not installed (skipping)"
+        return 0
+    fi
+
+    if ! docker info &>/dev/null; then
+        echo -e "  ${Y}~${N} Docker not running"
+        return 0
+    fi
+
+    # Check for docker-compose files
+    local compose_file=""
+    for f in docker-compose.yml docker-compose.yaml compose.yml compose.yaml; do
+        [[ -f "$f" ]] && compose_file="$f" && break
+    done
+
+    if [[ -z "$compose_file" ]]; then
+        echo -e "  ${Y}○${N} No docker-compose file found"
+        return 0
+    fi
+
+    echo -e "  ${G}✓${N} Found $compose_file"
+
+    # Check running containers
+    local running=$(docker ps --format '{{.Names}}\t{{.Status}}' 2>/dev/null)
+
+    if [[ -z "$running" ]]; then
+        echo -e "  ${Y}~${N} No containers running"
+        return 0
+    fi
+
+    echo -e "\n${C}Container Status:${N}"
+    while IFS=$'\t' read -r name status; do
+        if [[ "$status" == *"healthy"* ]]; then
+            echo -e "  ${G}✓${N} $name: $status"
+        elif [[ "$status" == *"unhealthy"* ]]; then
+            echo -e "  ${R}✗${N} $name: ${R}$status${N}"
+            ((issues++))
+        elif [[ "$status" == *"Up"* ]]; then
+            echo -e "  ${G}✓${N} $name: $status"
+        else
+            echo -e "  ${Y}~${N} $name: $status"
+            ((warnings++))
+        fi
+    done <<< "$running"
+
+    # Check for expected services from compose file
+    if [[ -f "$compose_file" ]]; then
+        local expected_services=$(grep -E "^  [a-z].*:$" "$compose_file" 2>/dev/null | sed 's/://' | tr -d ' ')
+
+        echo -e "\n${C}Service Check:${N}"
+        for service in $expected_services; do
+            if docker ps --format '{{.Names}}' | grep -qi "$service"; then
+                echo -e "  ${G}✓${N} $service running"
+            else
+                echo -e "  ${R}✗${N} $service ${R}NOT RUNNING${N}"
+                ((issues++))
+            fi
+        done
+    fi
+
+    # Check for env var mismatches (common issue!)
+    echo -e "\n${C}Environment Check:${N}"
+    for container in $(docker ps --format '{{.Names}}' | grep -iE "postgres|mysql|redis"); do
+        if [[ "$container" == *postgres* ]]; then
+            local container_pass=$(docker exec "$container" printenv POSTGRES_PASSWORD 2>/dev/null)
+            local env_pass=$(grep "POSTGRES_PASSWORD" .env 2>/dev/null | cut -d'=' -f2)
+
+            if [[ -n "$container_pass" && -n "$env_pass" && "$container_pass" != "$env_pass" ]]; then
+                echo -e "  ${R}✗${N} PASSWORD MISMATCH: Container vs .env for $container"
+                echo -e "      Container: ${container_pass:0:10}..."
+                echo -e "      .env: ${env_pass:0:10}..."
+                ((issues++))
+            elif [[ -n "$container_pass" ]]; then
+                echo -e "  ${G}✓${N} $container credentials consistent"
+            fi
+        fi
+    done
+
+    if [[ $issues -gt 0 ]]; then
+        echo ""
+        echo -e "${R}┌─────────────────────────────────────────────┐${N}"
+        echo -e "${R}│  ✗ $issues DOCKER ISSUE(S) - FIX BEFORE DEPLOY │${N}"
+        echo -e "${R}└─────────────────────────────────────────────┘${N}"
+        return 1
+    fi
+    return 0
+}
+
+check_local_ai() {
+    echo -e "${B}Checking Local AI (Ollama)...${N}"
+
+    local ollama_url="${OLLAMA_URL:-http://localhost:11434}"
+
+    # Check if Ollama is configured
+    if [[ -z "${OLLAMA_URL:-}" ]] && ! grep -q "OLLAMA_URL" .env 2>/dev/null; then
+        echo -e "  ${Y}○${N} OLLAMA_URL not configured (will use fallback responses)"
+        return 0
+    fi
+
+    # Check if Ollama is running
+    if curl -s "$ollama_url/api/tags" &>/dev/null; then
+        echo -e "  ${G}✓${N} Ollama running at $ollama_url"
+
+        # Check for models
+        local models=$(curl -s "$ollama_url/api/tags" 2>/dev/null | grep -oP '"name":"[^"]+' | cut -d'"' -f4)
+
+        if [[ -n "$models" ]]; then
+            echo -e "  ${G}✓${N} Models available:"
+            for model in $models; do
+                echo -e "      - $model"
+            done
+        else
+            echo -e "  ${Y}~${N} No models installed"
+            echo -e "      Run: ollama pull mistral"
+        fi
+    else
+        echo -e "  ${R}✗${N} Ollama not responding at $ollama_url"
+        echo -e "      Run: ollama serve"
+        return 1
+    fi
+    return 0
+}
+
+verify_by_type() {
+    local type="$1"
+    echo ""
+    echo -e "${C}═══ Verification: $type ═══${N}"
+
+    case "$type" in
+        ui)         check_wiring ;;
+        api)        check_api ;;
+        database)   check_database ;;
+        integration) check_integrations ;;
+        docker)     check_docker ;;
+        ai)         check_local_ai ;;
+        fullstack)  check_wiring; check_api; check_database; check_integrations; check_docker ;;
+        all)        check_wiring; check_api; check_database; check_integrations; check_docker; check_local_ai ;;
+        *)          check_wiring; check_api ;;
+    esac
+}
+
+run_tests() {
+    echo -e "${B}Running tests...${N}"
+    local stack=$(detect_stack)
+
+    case "$stack" in
+        node)   npm test --if-present 2>/dev/null && echo -e "${G}✓ Tests pass${N}" || echo -e "${R}✗ Tests failed${N}" ;;
+        python) pytest -q 2>/dev/null && echo -e "${G}✓ Tests pass${N}" || echo -e "${R}✗ Tests failed${N}" ;;
+        go)     go test ./... 2>/dev/null && echo -e "${G}✓ Tests pass${N}" || echo -e "${R}✗ Tests failed${N}" ;;
+        rust)   cargo test --quiet 2>/dev/null && echo -e "${G}✓ Tests pass${N}" || echo -e "${R}✗ Tests failed${N}" ;;
+        *)      echo -e "${Y}! Unknown stack, skipping tests${N}" ;;
+    esac
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PHASE DETECTION (auto-pilot)
+# ─────────────────────────────────────────────────────────────────────────────
+detect_phase() {
+    # Priority 1: Uncommitted changes
+    [[ -n $(git status --porcelain 2>/dev/null) ]] && echo "commit" && return
+
+    # Priority 2: No PRD
+    [[ ! -f "$PRD" ]] && echo "prd" && return
+
+    # Priority 3: No specs
+    [[ ! -f "$SPECS" ]] && echo "specs" && return
+
+    # Priority 4: No stories
+    [[ ! -f "$STORIES" ]] && echo "stories" && return
+
+    # Priority 5: Uncompleted stories
+    if grep -q "^\- \[ \]" "$STORIES" 2>/dev/null; then
+        echo "build"
+        return
+    fi
+
+    # Priority 6: All done, need review
+    echo "review"
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AGENTS & SIGNALS
+# ─────────────────────────────────────────────────────────────────────────────
+# Phase → Agent mapping (original 4 + verification agents)
+# Original: Plan=Cipher, Build=Vector, Test=Cortex, Review=Sentinel
+get_agent() {
+    case "$1" in
+        # Core flow (original 4)
+        prd)         echo "cipher" ;;    # Plan phase
+        specs)       echo "cipher" ;;    # Plan phase
+        stories)     echo "cipher" ;;    # Plan phase
+        build)       echo "vector" ;;    # Build phase
+        test)        echo "cortex" ;;    # Test phase
+        review)      echo "sentinel" ;;  # Review phase
+        commit)      echo "vector" ;;    # Build phase
+        # Verification agents
+        verify)      echo "atomic" ;;
+        quick-check) echo "sanity" ;;
+        test-matrix) echo "nexus" ;;
+        contracts)   echo "nexus" ;;
+        rollback)    echo "phoenix" ;;
+        inventory)   echo "scanner" ;;
+        health)      echo "pulse" ;;
+        env)         echo "sentinel" ;;
+        *)           echo "mothership" ;;
+    esac
+}
+
+get_signal() {
+    local agent=$(get_agent "$1")
+    case "$1" in
+        prd)         echo "<$agent>PRD_COMPLETE</$agent>" ;;
+        specs)       echo "<$agent>SPECS_COMPLETE</$agent>" ;;
+        stories)     echo "<$agent>PLANNED:N</$agent>" ;;
+        build)       echo "<$agent>BUILT:ID</$agent> or <$agent>BUILD_COMPLETE</$agent>" ;;
+        test)        echo "<$agent>TESTED</$agent>" ;;
+        review)      echo "<$agent>APPROVED</$agent> or <$agent>NEEDS_WORK:reason</$agent>" ;;
+        commit)      echo "<$agent>COMMITTED</$agent>" ;;
+        verify)      echo "<$agent>VERIFIED</$agent> or <$agent>UNWIRED:issues</$agent>" ;;
+        quick-check) echo "<$agent>QUICK_CHECK:pass</$agent>" ;;
+        test-matrix) echo "<$agent>MATRIX_PASS</$agent>" ;;
+        contracts)   echo "<$agent>CONTRACTS_VALID</$agent>" ;;
+        rollback)    echo "<$agent>ROLLBACK_VERIFIED</$agent>" ;;
+        inventory)   echo "<$agent>INVENTORY_COMPLETE</$agent>" ;;
+        health)      echo "<$agent>HEALTHY</$agent>" ;;
+        env)         echo "<$agent>ENV_VERIFIED</$agent>" ;;
+        *)           echo "<$agent>DONE</$agent>" ;;
+    esac
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PROMPTS (minimal, phase-specific)
+# ─────────────────────────────────────────────────────────────────────────────
+get_prompt() {
+    local phase="$1"
+    local goal="$2"
+
+    case "$phase" in
+        prd)
+            cat << EOF
+${goal:+Goal: $goal}
+
+Create $PRD with:
+## Problem
+What problem are we solving? Who has it?
+
+## Success Criteria
+Measurable outcomes (not features). How do we know we succeeded?
+
+## Scope
+IN: What we're building
+OUT: What we're NOT building
+
+## Constraints
+Technical limitations, deadlines, dependencies
+
+Signal: $(get_signal prd)
+EOF
+            ;;
+
+        specs)
+            cat << EOF
+Read: $PRD
+
+Create $SPECS with:
+
+## Database Schema
+Tables, fields, types, relations. Be specific.
+\`\`\`sql
+CREATE TABLE users (...)
+\`\`\`
+
+## API Endpoints
+Method, path, request body, response body, status codes.
+\`\`\`
+POST /api/auth/login
+Request: { email, password }
+Response: { token, user }
+Errors: 401 Invalid credentials
+\`\`\`
+
+## Components
+UI component tree with props and state.
+\`\`\`
+LoginPage
+├── LoginForm (onSubmit, isLoading)
+│   ├── EmailInput (value, onChange, error)
+│   └── PasswordInput (value, onChange, error)
+└── AuthLinks
+\`\`\`
+
+Each spec must be testable. Include the test.
+
+Signal: $(get_signal specs)
+EOF
+            ;;
+
+        stories)
+            cat << EOF
+Read: $PRD, $SPECS
+
+Create $STORIES with atomic stories:
+
+\`\`\`markdown
+- [ ] [database] Create users table
+  AC: Table exists with id, email, password_hash, created_at
+  Verify: \`psql -c "\\d users"\` shows columns
+
+- [ ] [api] POST /api/auth/login endpoint
+  AC: Returns 200 + token for valid credentials, 401 for invalid
+  Verify: \`curl -X POST /api/auth/login -d '{"email":"test@test.com","password":"test"}'\`
+
+- [ ] [ui] LoginForm component
+  AC: Submits credentials, shows loading state, handles errors
+  Verify: Click submit, see spinner, see error message on failure
+\`\`\`
+
+Types: database, api, ui, integration, fullstack
+Order: database → api → ui (dependencies first)
+Each story: ONE thing, testable, independent
+
+Signal: $(get_signal stories)
+EOF
+            ;;
+
+        build)
+            local next=$(grep -m1 "^\- \[ \]" "$STORIES" 2>/dev/null || echo "")
+            local type=$(echo "$next" | grep -oP '\[(database|api|ui|integration|fullstack)\]' | tr -d '[]' || echo "fullstack")
+            cat << EOF
+Current story: $next
+
+1. Implement ONLY this story
+2. Before committing, verify:
+   ${type} type checks:
+   - database: table exists, migrations run, can insert/select
+   - api: endpoint responds, returns expected format
+   - ui: component renders, handlers fire, no empty onClick
+   - integration: external service responds
+   - fullstack: ALL of the above
+3. Update $STORIES: change [ ] to [x]
+4. Commit with message: "feat($type): <what you built>"
+
+If blocked, signal: <cipher>BLOCKED:reason</cipher>
+If done with this story: $(get_signal build)
+If no more stories: <cipher>BUILD_COMPLETE</cipher>
+EOF
+            ;;
+
+        test)
+            cat << EOF
+Run comprehensive tests:
+
+1. Unit tests: \`npm test\` / \`pytest\` / \`go test\`
+2. Type checks: \`tsc --noEmit\` / \`mypy\`
+3. Lint: \`eslint\` / \`ruff\`
+4. API tests: hit each endpoint
+5. DB tests: check migrations, constraints
+
+Fix any failures before signaling.
+
+Signal: $(get_signal test)
+EOF
+            ;;
+
+        review)
+            cat << EOF
+Final review. Check:
+
+1. PRD success criteria met?
+2. All stories completed?
+3. No empty handlers (onClick={}, onChange={})?
+4. API endpoints all respond correctly?
+5. Database tables created and writable?
+6. Environment variables documented?
+7. Security: no hardcoded secrets, SQL injection, XSS?
+8. Edge cases handled?
+
+If issues found: $(get_signal review | grep NEEDS_WORK)
+If approved: $(get_signal review | grep APPROVED)
+EOF
+            ;;
+
+        commit)
+            cat << EOF
+Uncommitted changes detected.
+
+1. Review changes: \`git diff\`
+2. Run tests
+3. If good: commit with descriptive message
+4. If not: fix issues first
+
+Signal: $(get_signal commit)
+EOF
+            ;;
+
+        *)
+            echo "Unknown phase: $phase"
+            ;;
+    esac
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RUN AI
+# ─────────────────────────────────────────────────────────────────────────────
+run_ai() {
+    local prompt="$1"
+    local ai=$(detect_ai)
+
+    if [[ -z "$ai" ]]; then
+        echo -e "${R}No AI found. Install: claude, gemini, codex, or opencode${N}"
+        exit 1
+    fi
+
+    case "$ai" in
+        claude)   claude --print -p "$prompt" ;;
+        gemini)   gemini "$prompt" ;;
+        codex)    codex "$prompt" ;;
+        opencode) opencode "$prompt" ;;
+    esac
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STATUS
+# ─────────────────────────────────────────────────────────────────────────────
+show_status() {
+    local phase=$(detect_phase)
+    local agent=$(get_agent "$phase")
+    local ai=$(detect_ai)
+    local stack=$(detect_stack)
+
+    echo -e "${C}┌───────────────────────────────────────────────────────┐${N}"
+    echo -e "${C}│${N}  ${B}MOTHERSHIP${N}                                          ${C}│${N}"
+    echo -e "${C}├───────────────────────────────────────────────────────┤${N}"
+    echo -e "${C}│${N}  AI: ${G}${ai:-none}${N}    Stack: ${Y}$stack${N}                      ${C}│${N}"
+    echo -e "${C}├───────────────────────────────────────────────────────┤${N}"
+
+    # Artifacts
+    [[ -f "$PRD" ]] && echo -e "${C}│${N}  ${G}✓${N} PRD      " || echo -e "${C}│${N}  ${Y}○${N} PRD       (pending)"
+    [[ -f "$SPECS" ]] && echo -e "${C}│${N}  ${G}✓${N} Specs    " || echo -e "${C}│${N}  ${Y}○${N} Specs     (pending)"
+
+    if [[ -f "$STORIES" ]]; then
+        local done=$(grep -c "^\- \[x\]" "$STORIES" 2>/dev/null || echo 0)
+        local todo=$(grep -c "^\- \[ \]" "$STORIES" 2>/dev/null || echo 0)
+        echo -e "${C}│${N}  ${G}✓${N} Stories   ${G}$done done${N}, ${Y}$todo todo${N}"
+    else
+        echo -e "${C}│${N}  ${Y}○${N} Stories   (pending)"
+    fi
+
+    echo -e "${C}├───────────────────────────────────────────────────────┤${N}"
+    echo -e "${C}│${N}  Phase: ${B}$phase${N}    Agent: ${Y}$agent${N}"
+    echo -e "${C}└───────────────────────────────────────────────────────┘${N}"
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MAIN
+# ─────────────────────────────────────────────────────────────────────────────
+main() {
+    local goal="$*"
+    local phase=$(detect_phase)
+    local agent=$(get_agent "$phase")
+
+    show_status
+    echo ""
+
+    # Run verification before build phase
+    if [[ "$phase" == "build" ]]; then
+        local next=$(grep -m1 "^\- \[ \]" "$STORIES" 2>/dev/null || echo "")
+        local type=$(echo "$next" | grep -oP '\[(database|api|ui|integration|fullstack)\]' | tr -d '[]' || echo "fullstack")
+        verify_by_type "$type"
+        echo ""
+    fi
+
+    # Run tests before review
+    if [[ "$phase" == "review" ]]; then
+        run_tests
+        echo ""
+    fi
+
+    # Get and run prompt
+    local prompt=$(get_prompt "$phase" "$goal")
+
+    echo -e "${G}▶ Phase: $phase${N} → Agent: ${Y}$agent${N}"
+    echo ""
+
+    run_ai "$prompt"
+
+    # Log
+    echo "$(date -Iseconds) | $phase | $agent" >> "$LOG"
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CLI
+# ─────────────────────────────────────────────────────────────────────────────
+case "${1:-}" in
+    -h|--help|help)
+        echo -e "${B}mothership${N} - Complete autonomous development"
+        echo ""
+        echo "Usage:"
+        echo "  ./mothership              Auto-detect phase, run it"
+        echo "  ./mothership [goal]       Start with a goal"
+        echo "  ./mothership onboard      Generate context (CLAUDE.md, skills)"
+        echo "  ./mothership status       Show current state"
+        echo "  ./mothership verify       Run all verifications"
+        echo "  ./mothership reset        Clear state, start fresh"
+        echo ""
+        echo "Context generation (like SummonAI Kit):"
+        echo "  onboard    Generate CLAUDE.md, GEMINI.md, CODEX.md, OPENCODE.md"
+        echo "             + AGENTS.md + stack-specific skills"
+        echo ""
+        echo "Flow (original 4 agents):"
+        echo "  01 Plan   → cipher     PRD, specs, stories"
+        echo "  02 Build  → vector     Implement with verification"
+        echo "  03 Test   → cortex     Run test suite"
+        echo "  04 Review → sentinel   Final quality check"
+        echo ""
+        echo "Verification agents:"
+        echo "  sanity   quick-check   Fast build/lint"
+        echo "  atomic   verify        Runtime wiring"
+        echo "  nexus    test-matrix   8-layer coverage"
+        echo "  nexus    contracts     API validation"
+        echo "  phoenix  rollback      Rollback testing"
+        echo "  scanner  inventory     Codebase mapping"
+        echo "  pulse    health        Integration health"
+        echo ""
+        echo "State: .mothership/"
+        ;;
+    onboard)
+        generate_context
+        ;;
+    status)
+        show_status
+        ;;
+    verify)
+        verify_by_type "${2:-fullstack}"
+        ;;
+    reset)
+        rm -rf "$SHIP_DIR"
+        echo -e "${G}✓ Reset complete${N}"
+        ;;
+    *)
+        main "$@"
+        ;;
+esac
